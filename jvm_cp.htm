@@ -1,0 +1,721 @@
+<body>
+
+<h2>Constant Pool</h2>
+<p>
+In a java class several constant value is stored. It stores numeric, string and reference values 
+in a pool and those are used in  machine codes known as 'Java Byte Code'. Constant pool contains
+constant_pool_count items in a sequential list of following structure. 
+</p>
+<pre>
+
+    struct cp_info
+    {
+	    u1 tag;
+        u1* info;
+    };
+</pre>
+<p>
+Constant pool information structure starts with one byte of tag information that 
+indicates the type of the constant pool. Constant pool structure length is variable 
+depending on the type of constant. Constant pool tag value can be one of the 
+following values depending on the type of constant.
+</p>
+<pre>
+
+    #define CONSTANT_Integer  3  
+    #define CONSTANT_Float  4  
+    #define CONSTANT_Long  5  
+    #define CONSTANT_Double  6  
+    #define CONSTANT_Utf8  1  
+    #define CONSTANT_String  8  
+    
+    #define CONSTANT_Class  7  
+    #define CONSTANT_Fieldref  9  
+    #define CONSTANT_Methodref  10  
+    #define CONSTANT_InterfaceMethodref  11  
+    #define CONSTANT_NameAndType  12          
+</pre>
+<p>
+Depending on the value of tag we can cast the cp_info structure in more precise 
+structures listed here.
+</p>
+
+<h3>CONSTANT_Integer_info</h3>
+<p>
+If tag value equals <code>CONSTANT_Integer</code> in cp_info structure then it is an integer 
+constant. We can cast the cp_info structure in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_Integer_info {
+        u1 tag;
+        u4 bytes;
+    };
+</pre>
+<p>
+This structure does not have any reference to any other constant. It represents 
+direct 4 byte integer value.
+</p>
+
+<h3>CONSTANT_Float_info</h3>
+<p>
+If tag value equals <code>CONSTANT_Float</code> in cp_info structure then it is a float 
+constant. We can cast the cp_info structure in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_Float_info {
+        u1 tag;
+        u4 bytes;
+    };
+</pre>
+<p>
+It is a direct value constant without any reference.
+</p>
+
+<h3>CONSTANT_Long_info</h3>
+<p>
+If tag value equals <code>CONSTANT_Long</code> in cp_info structure then it is a long 
+constant. We can cast the cp_info structure in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_Long_info {
+        u1 tag;
+        u4 high_bytes;
+        u4 low_bytes;
+    };
+</pre>
+<p>
+It is a direct value constant without any reference. It uses two four bute values
+to construct the 8 byte long value.
+</p>
+
+<h3>CONSTANT_Long_info</h3>
+<p>
+If tag value equals <code>CONSTANT_Double</code> in cp_info structure then it is a double 
+constant. We can cast the cp_info structure in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_Double_info {
+        u1 tag;
+        u4 high_bytes;
+        u4 low_bytes;
+    };
+</pre>
+<p>
+It is a direct value constant without any reference. It uses two four bute values
+to construct the 8 byte double value.
+</p>
+
+
+<h3>CONSTANT_Utf8_info</h3>
+<p>
+If tag value equals <code>CONSTANT_Utf8</code> in cp_info structure then it is a utf8 string 
+constant. We can cast the cp_info structure in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_Utf8_info {
+        u1 tag;
+        u2 length;
+        u1* bytes;//[length];
+    };
+</pre>
+
+<p>
+It is a direct value constant without any reference. The short value <code>length</code> defines
+the length of the byte array followed by <code>length</code> number of bytes.
+</p>
+
+<h3>CONSTANT_String_info</h3>
+<p>
+If tag value equals <code>CONSTANT_String</code> in cp_info structure then it is a string <i>reference</i>
+constant. We can cast the cp_info structure in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_String_info {
+        u1 tag;
+        u2 string_index;
+    };
+</pre>
+
+<p>
+It is a reference value constant. The short value <code>string_index</code> refers
+to a <code>CONSTANT_Utf8_info</code> index in the constant pool.
+</p>
+
+<h3>CONSTANT_Class_info</h3>
+<p>
+If tag value equals <code>CONSTANT_Class</code> in cp_info structure then it is a class <i>reference</i>
+constant. We can cast the cp_info structure in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_Class_info {
+ 	    u1 tag;
+   	    u2 name_index;
+    };
+</pre>
+
+<p>
+It is a reference value constant. The short value <code>name_index</code> refers
+to a <code>CONSTANT_Utf8_info</code> index in the constant pool that is the fully
+qualified name (ie <code>java/lang/String</code>) of the class- dot replaced by 
+slash.
+</p>
+
+<h3>CONSTANT_Fieldref_info</h3>
+<p>
+If tag value equals <code>CONSTANT_Fieldref</code> in cp_info structure then 
+it is a field <i>reference</i> constant. We can cast the cp_info structure 
+in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_Fieldref_info {
+        u1 tag;
+        u2 class_index;
+        u2 name_and_type_index;
+    };
+</pre>
+
+<p>
+It is a reference value constant. The short value <code>class_index</code> refers
+to a <code>CONSTANT_Class_info</code> index in the constant pool and 
+<code>name_and_type_index</code> refers to a string index in the constant pool that 
+is the fully qualified name (ie <code>java/lang/String@valueOf(F)Ljava/lang/String;</code>) 
+of the class- dot replaced by slash.
+</p>
+
+<h3>CONSTANT_Methodref_info</h3>
+<p>
+If tag value equals <code>CONSTANT_Methodref</code> in cp_info structure then 
+it is a method <i>reference</i> constant. We can cast the cp_info structure 
+in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_Methodref_info {
+        u1 tag;
+        u2 class_index;
+        u2 name_and_type_index;
+    };
+</pre>
+
+<p>
+It is a reference value constant. The short value <code>class_index</code> refers
+to a <code>CONSTANT_Class_info</code> index in the constant pool and 
+<code>name_and_type_index</code> refers to a string index in the constant pool that 
+is the fully qualified name (ie <code>java/lang/String@valueOf(F)Ljava/lang/String;</code>) 
+of the class- dot replaced by slash.
+</p>
+
+<h3>CONSTANT_InterfaceMethodref_info</h3>
+<p>
+If tag value equals <code>CONSTANT_InterfaceMethodref</code> in cp_info structure then 
+it is an interface method <i>reference</i> constant. We can cast the cp_info structure 
+in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_InterfaceMethodref_info {
+        u1 tag;
+        u2 class_index;
+        u2 name_and_type_index;
+    };
+</pre>
+
+<p>
+It is a reference value constant. The short value <code>class_index</code> refers
+to a <code>CONSTANT_Class_info</code> index in the constant pool and 
+<code>name_and_type_index</code> refers to a string index in the constant pool that 
+is the fully qualified name (ie <code>java/lang/String@valueOf(F)Ljava/lang/String;</code>) 
+of the class- dot replaced by slash.
+</p>
+
+<h3>CONSTANT_NameAndType_info</h3>
+<p>
+If tag value equals <code>CONSTANT_NameAndType</code> in cp_info structure then 
+it is an interface method <i>reference</i> constant. We can cast the cp_info structure 
+in following structure.
+</p>
+<pre>
+
+    struct CONSTANT_NameAndType_info {
+        u1 tag;
+        u2 name_index;
+        u2 descriptor_index;
+    };
+</pre>
+
+<p>
+It is a reference value constant. The short value <code>name_index</code> refers
+to a string index in the constant pool and <code>descriptor_index</code> refers to another 
+string index in the constant pool.
+</p>
+
+<h3>Parsing constant pool</h3>
+<p> 
+Here we set the values of constant pool list pointers. When we need to retrieve the
+actual value we look at the tag and pick the value directly. 
+</p>
+<pre>
+
+    BOOL JavaClass::ParseConstantPool(char* &p)
+    {	
+        constant_pool = new cp_info*[constant_pool_count-1];
+        if(constant_pool == NULL) return FALSE;    
+        for(int i=1;i&lt;constant_pool_count;i++)
+        {
+            //We set the constant pointer here
+            constant_pool[i]=(cp_info*)p;
+                
+            //We now calculate constant size. If it is an integer we get size = 5		
+            int size = GetConstantPoolSize(p);
+            p+= size;
+
+            // If constant type is long or double constant pool takes two entries. Second entry
+            // is not used by virtual machine but kept NULL to walk constant pool correctly.
+            if(constant_pool[i]-&gt;tag == CONSTANT_Long || constant_pool[i]-&gt;tag == CONSTANT_Double)
+            {
+                constant_pool[i+1]=NULL;
+                i++;
+            }
+        }
+        return TRUE;
+    }
+</pre>
+<h2>Interfaces</h2>
+<p>
+In the <code>interfaces</code> field of a class there are <code>interfaces_count</code> 
+number of short (u2) values. Each value is a <i>reference</i> to a constant pool entry
+of type <code>CONSTANT_Class</code>. We parse them and store in our in-memory object-
+</p>
+
+<pre>
+
+    BOOL JavaClass::ParseInterfaces(char* &p)
+    {	
+        interfaces = new u2[interfaces_count];    	
+        for(int i=0;i&lt;interfaces_count;i++)
+        {
+            interfaces[i] = getu2(p); p+=2;
+        }
+
+        return TRUE;
+    }
+    
+</pre>
+
+<h2>Fields</h2>
+<p>
+A class may contain zero, one or more fields. The actual number is stored in the 
+<code>fields_count</code> field. A list of <code>field_info</code> structure followes 
+this value.
+</p>
+
+<pre>
+
+    struct field_info
+    {
+	    u2 access_flags;
+        u2 name_index;
+        u2 descriptor_index;
+        u2 attributes_count;
+        attribute_info* attributes;//[attributes_count];
+    };
+</pre>
+<p>
+The short value <code>access_flags</code> describes the allowed field access. Here is
+the possible access flags values which is shared also by methods and classes-
+</p>
+<pre>
+
+    #define ACC_PUBLIC  0x0001  
+    /*Declared public; may be accessed from outside its package.  */
+    
+    #define ACC_PRIVATE  0x0002  
+    /*Declared private; accessible only within the defining class.  */
+    
+    #define ACC_PROTECTED  0x0004  
+    /*Declared protected; may be accessed within subclasses.  */
+    
+    #define ACC_STATIC  0x0008  /*Declared static.  */
+    
+    #define ACC_FINAL  0x0010  
+    /*Declared final; may not be overridden.  */
+    
+    #define ACC_SYNCHRONIZED  0x0020  
+    /*Declared synchronized; invocation is wrapped in a monitor lock.  */
+    
+    #define ACC_NATIVE  0x0100  
+    /*Declared native; implemented in a language other than Java.  */
+    
+    #define ACC_ABSTRACT  0x0400  
+    /*Declared abstract; no implementation is provided.  */
+    
+    #define ACC_STRICT  0x0800  
+    /*Declared strictfp; floating-point mode is FP-strict  */
+</pre>
+
+<p>
+The <code>name_index</code> and <code>descriptor_index</code> are reference to two 
+constant pool of type utf8 string. The <code>attributes</code> field defined the 
+attributes of the field. Attributes are described later. Here is how we parse fields
+in a class's raw bytes- 
+</p>
+<pre>
+
+    BOOL JavaClass::ParseFields(char* &p)
+    {
+        fields = new field_info_ex[fields_count];
+        if(fields == NULL) return FALSE;
+
+        for(int i=0;i&lt;fields_count;i++)
+        {
+            fields[i].pFieldInfoBase = (field_info*)p;
+
+            fields[i].access_flags= getu2(p); p+=2; //access_flags
+            fields[i].name_index= getu2(p);p+=2; //
+            fields[i].descriptor_index= getu2(p);p+=2; //
+            fields[i].attributes_count=getu2(p); p+=2;
+
+            if(fields[i].attributes_count>0)
+            {
+                //skip attributes - we do not need in simple cases
+                for(int a=0;a&lt;fields[i].attributes_count;a++)
+                {
+	                u2 name_index=getu2(p); p+=2;
+	                //printf("Attribute name index = %d\n", name_index);
+	                u4 len=getu4(p);p+=4;
+	                p+=len;
+                }
+            }    		
+        }
+        return TRUE;
+    }
+
+</pre>
+
+<h2>Methods</h2>
+<p>
+A java class file may contain arbitrary number of methods. The count is stored in 
+<code>methods_count</code> member of class file structure. As it is a two byte field
+the theoritical upper limit is essentially 2^16. Like fields info, method info structure
+contains access flags, name index, descriptor index, and attributes.
+</p>
+
+<pre>
+
+    struct method_info
+    {
+	    u2 access_flags;
+        u2 name_index;
+        u2 descriptor_index;
+        u2 attributes_count;
+        attribute_info* attributes;//[attributes_count];
+    };
+
+</pre>
+
+<p>
+Method body (if any) is stored in an attribute named <code>Code</code>- which contains the actual 
+'Java Byte Code'. Here is how we parse methods in out virtual machine-
+</p>
+
+<pre>
+
+    //TODO: Cashe the findings here
+    BOOL JavaClass::ParseMethods(char* &p)
+    {
+	    methods = new method_info_ex[methods_count];
+
+	    if(methods == NULL) return FALSE;
+    	
+	    for(int i=0;i&lt;methods_count;i++)
+	    {
+		    //methods[i] = new method_info_ex;
+		    methods[i].pMethodInfoBase=(method_info*)p;
+		    methods[i].access_flags= getu2(p);	p+=2; //access_flags
+		    methods[i].name_index = getu2(p); p+=2; //name_index
+		    methods[i].descriptor_index= getu2(p); p+=2; //descriptor_index
+		    methods[i].attributes_count=getu2(p); p+=2;
+    		
+		    CString strName, strDesc;
+		    GetStringFromConstPool(methods[i].name_index, strName);
+		    GetStringFromConstPool(methods[i].descriptor_index, strDesc);
+
+		    TRACE(_T("Method = %s%s\n"),strName, strDesc);
+    		
+		    TRACE("Method has total %d attributes\n",methods[i].attributes_count);
+
+		    methods[i].pCode_attr=NULL;
+		    if(methods[i].attributes_count&gt;0)
+		    {
+			    //skip attributes
+			    for(int a=0;a&lt;methods[i].attributes_count;a++)
+			    {
+				    u2 name_index=getu2(p); p+=2;
+    				
+				    TRACE("Attribute name index = %d\n", name_index);
+				    u4 len=getu4(p);p+=4;
+				    p+=len;
+			    }
+
+			    methods[i].pCode_attr = new Code_attribute;
+			    ParseMethodCodeAttribute(i, methods[i].pCode_attr);
+		    }		
+	    }
+
+	    return TRUE;
+    }
+
+</pre>
+<p>
+In case of method structure ( and also same in fields structure) I have used  <code>method_info_ex</code> instead
+of <code>method_info</code> structure. This extended structure on pointer to pint to raw
+method info in the in-memory bytestream of class file. Here with other fields we parse the <code>Code</code> attribute. 
+The details id given later in attributes section.
+</p>
+<h2>Attributes</h2>
+<p>
+In most classes attributes takes most of the space in file. Class has attributes, method has attributes, 
+field has attributes. The raw definition of attribute is like this-
+</p>
+<pre>
+
+    struct attribute_info
+    {
+	    u2 attribute_name_index;
+        u4 attribute_length;
+        u1* info;//[attribute_length];
+    };
+
+</pre>
+
+<p>
+The <code>attribute_name_index</code> field is the reference index in the constant pool 
+for string type constant. The <code>attribute_length</code> field is the length of info field-
+which is another structure depending on the type/ name of the attribute. An arrtibute can be
+a constant value, exception table or code type.
+</p>
+<h3>Constant value attribute</h3>
+
+<pre>
+
+    struct ConstantValue_attribute {
+	    u2 attribute_name_index;
+	    u4 attribute_length;
+	    u2 constantvalue_index;
+    };
+
+</pre>
+
+<h3>Code Attribute</h3>
+<p>
+It is also a method specific attribute. The name of the attribute is hardcoded as 'Code'.
+This attribute has maximum stack and maximum local values of the method. The <code>code</code> 
+field is variable length defined by <code>code_length</code> and it contains the actual 
+'Java Byte Code'.
+</p>
+
+<pre>
+
+    struct Code_attribute {
+        u2 attribute_name_index;
+        u4 attribute_length;
+        u2 max_stack;
+        u2 max_locals;
+        u4 code_length;
+        u1* code;//[code_length];
+        u2 exception_table_length;
+        Exception_table* exception_table;//[exception_table_length];
+        u2 attributes_count;
+        attribute_info* attributes;//[attributes_count];
+    };
+</pre>
+
+<h4>Exception table structure</h4>
+<p>
+        This structure is used to define the exception table for methods. The exception 
+    table describes the exception handler depending on the program counter value or 
+    offset of byte code. The handler code is also an offset in the byte code.
+</p>
+<pre>
+
+    struct Exception_table
+    {
+        u2 start_pc;
+        u2 end_pc;
+        u2  handler_pc;
+        u2  catch_type;
+    };
+
+</pre>
+<p>
+The field catch_type is a reference to a constant pool entry that describes the type 
+of the exception- for example reference to a class named 'java/lang/Exception'. 
+</p>
+
+<h2>Java Instruction Set</h2>
+<p>
+Java has more than 200 instructions. The java language file, when compiled, is converted
+to a class file that contains intrtuctions as byte codes. If we have a method like this-  
+</p>
+
+<pre>
+
+	public int mul(int a, int b)
+	{
+		return a * b;
+	}
+</pre>
+
+<p>
+we will get this method in byte code attribute like this- (java has also assembly like 
+representation for instructions to represent byte codes in human readable format)
+</p>
+<pre>
+
+  Code Attribute:
+    Stack=2, Locals=3, Args_size=3,  Code Length = 4
+    Code:
+    0:   iload_1
+    1:   iload_2
+    2:   imul
+    3:   ireturn   
+</pre>
+
+<p>Here if we follow the instructions we go like this:</p>
+<pre>
+
+    0: Push (load) the local variable 1 on stack
+    1: Push the local variable 2 on stack
+    3: Pop two values from stack, do an integer multipucation and push the result
+    4: Return the integer value from stack top.    
+</pre>
+<p>
+What we need to do in our virtual machine is load classes and follow the instructions
+in methods. There are methods to create new objects, to call methods of object. It is also 
+possible to call native methods from a java method. Please refer to source code 
+for most other codes (opcodes.h) or Java Virtual Machine Specification for a complete list.
+</p>
+
+<h2>Class heap</h2>
+<p>
+In the virtual machine we must maintain a heap where the class definition objects
+can be stored. I have implemented it as a separate heap for simplity. In this heap 
+we load classes from files and store it in the heap. The <code>ClassHeap</code> class 
+is responsible for maintaining the class heap in meory.
+</p>
+<pre>
+
+    class ClassHeap
+    {
+	    CMapStringToPtr m_ClassMap;
+	    FilePathManager *pFilePathManager;
+    public:
+	    ClassHeap(void);
+    public:
+	    virtual ~ClassHeap(void);
+    public:
+	    BOOL AddClass(JavaClass* pJavaClass);
+	    JavaClass* GetClass(CString strClassName);
+	    BOOL LoadClass(CString strClassName, JavaClass *pClass);
+
+
+    };
+
+</pre>
+<p>
+We store <code>JavaClass</code> objects pointer in the <code>m_ClassMap</code> member
+using the class name as key.
+</p>
+
+<h2>Object heap</h2>
+<p>
+Object heap is virtual machine's RAM. All objects are created on object heap and its 
+reference can be stored in another object or on the stack. Any reference is stored in 
+an union type starage named <code>Variable</code>. Any field of a class can be 
+represented using variable object. Anything can be stored in a <code>Variable</code> 
+object.
+</p>
+
+<pre>
+
+    union Variable
+    {
+        u1 charValue;
+        u2 shortValue;
+        u4 intValue;
+        f4 floatValue;
+        LONG_PTR ptrValue;
+        Object object;
+    };
+
+</pre>
+<h3>Object creation</h3>
+<p>
+An object is usually created by JVM when a <code>new</code> or <code>newarray</code> or 
+<code>multinewarray</code> instruction is executed. When a virtual machine creates an object it 
+first calculate the size of the object. To calculate the object size we we first take the 
+<code>fields_count</code> value in the class structure then we add its super classes 
+<code>fields_count</code> value with it then we add super classes super classes <code>fields_count</code> and so 
+on recursively until we reach the final base class java.lang.Object. This way we 
+calculate total fields of the object and add one with it that holds the class pointer 
+in the ClassHeap. Now we multiply the <code>sizeof(Variable)</code> to the count and 
+get number of bytes required for the object. We now allocate the required bytes and 
+return the pointer to that memory in a <code>Variable</code> object on the stack top.
+</p>
+
+<h2>Virtual Machine Frame Stack</h2>
+<p>
+Java instruction set is designed in such a way that it can work with very limited set 
+of registers. Instead it uses its stack very extensively. 
+</p>
+<h3>The Stack Frame</h3>
+
+<h3>Local Variables</h3>
+<p>
+In a stack frame local variables takes positions from zero to <code>max_locals</code> - 1 
+positions or less. If the method is not static the object takes the position zero and other 
+locals follow it. Local variables are accessed using <code>putfield</code> and <code>getfield</code> 
+instructions described later.
+</p>
+<h3>Native method stack</h3>
+<p>
+Unlike virtual machine stack, native methods stack is not maintained by JVM. It is 
+maintained by the native system. Actually while a native method is being executed the 
+virtual machine component that was managing the java thread waits until the native 
+method completes and returns.
+</p>
+
+<h2>Execution Unit</h2>
+<p>
+This is the main module of the JVM. It interprates the instructons. Advanced JVMs may 
+use JIT compiler to convert java instructions into native instruction. But I did not do 
+that because of the complexity of the JIT compiler. 
+When a JVM starts it usually takes initial class name as parameter. Our JVM also takes 
+class name as a parameter. The class heap is then requested to load that class. Then the 
+JVM finds its main method (it can be any name like Entry in case of my first implementation), 
+creates the initial stack frame and requests the execution engine to start execution.
+</p>
+
+<h3>Setting or getting value in object</h3>
+<p>
+The <code>putfield</code> instruction is used to set a value (from stack) of a field and 
+the <code>getfield</code> instruction is used to load a variables value on the 
+stack. When the execution engine needs to execute a <code>getfield</code> 
+instruction it pops two values from the stack. One value is the object pointer 
+another is field position (zero based index). 
+</p>
+
+<h3>Invoking method</h3>
+<h4>Invoking native method</h4>
+
+<h2>The Garbage Collector</h2>
+
+</body>
