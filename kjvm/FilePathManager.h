@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 class FilePathManager
 {
@@ -8,5 +9,5 @@ public:
 public:
 	~FilePathManager(void);
 public:
-	bool GetAbsolutePath(std::string strRelativePath, std::string& strAbsolutePath);
+	bool GetAbsolutePath(std::string strRelativePath, std::string& strAbsolutePath, std::vector<std::string> &classRoots);
 };

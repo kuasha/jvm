@@ -47,16 +47,33 @@ JavaClass* ClassHeap::GetClass(std::string strClassName)
 bool ClassHeap::LoadClass(std::string strClassName, JavaClass *pClass)
 {
 	std::string path, relPath;
-	if(!pClass) return false;
+	if(!pClass) 
+	{
+		std::cout << "Must pass a class object" << std::endl;
+		return false;
+	}
+
 	relPath=strClassName+".class";
-	if(!pFilePathManager->GetAbsolutePath(relPath, path))
+
+	if(!pFilePathManager->GetAbsolutePath(relPath, path, classRoots_))
+	{
+		std::cout << "File not found " << path << std::endl;
 		return false;	
+	}
 
 	bool bRet=pClass->LoadClassFromFile(path);
 
-	if(!bRet) return false;
+	if(!bRet)
+	{
+		return false;
+	}
 
 	pClass->SetClassHeap(this);
 
 	return AddClass(pClass);
+}
+
+void ClassHeap::AddClassRoot(std::string classRoot) 
+{
+	classRoots_.push_back(classRoot);
 }

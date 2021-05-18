@@ -3,6 +3,7 @@
 #include <vector>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "JavaClass.h"
 #include "ClassHeap.h"
@@ -19,8 +20,6 @@ JavaClass::JavaClass(void):
 JavaClass::~JavaClass(void)
 {
 	// TODO: delete constant_pool, fields, methods and attributes etc.
-
-	if(m_pByteCode) delete m_pByteCode;
 	//if(methods) delete[] methods;
 	//if(fields) delete[] fields;	
 }
@@ -35,11 +34,12 @@ bool JavaClass::LoadClassFromFile(std::string lpszFilePath)
 	std::streamsize size = file.tellg();
 	file.seekg(0, std::ios::beg);
 
-	std::vector<unsigned char> buffer(size+1);
-	if (file.read((char *)buffer.data(), size))
+	byteCode_.reserve(size+1);
+	if (file.read((char *)byteCode_.data(), size))
 	{
-		p = &buffer[0]; //TODO: use vector to store
-		SetByteCode(p);		
+		p = &byteCode_[0]; //TODO: use vector to store
+		m_nByteCodeLength = size;
+		SetByteCode(p);
 		return true;
 	}
 	else
@@ -66,7 +66,8 @@ bool JavaClass::ParseClass(void)
 
 	magic = getu4(p); p+=4;
 
-	//ASSERT(magic == 0xCAFEBABE);
+	assert(magic == 0xCAFEBABE);
+
 
 	minor_version=getu2(p); p+=2;
     major_version=getu2(p); p+=2;
@@ -174,7 +175,7 @@ bool JavaClass::ParseMethods(char* &p)
 
 bool JavaClass::ParseConstantPool(char* &p)
 {	
-	constant_pool = new cp_info*[constant_pool_count-1];
+	constant_pool = new cp_info * [constant_pool_count-1];
 
 	if(constant_pool == NULL) return false;
 	
@@ -325,7 +326,7 @@ bool JavaClass::GetStringFromConstPool(int nIndex, std::string& strValue)
 	buffer[length]=0;
 	memcpy(buffer, &p[3], length);
 	strValue += buffer;
-	delete buffer;
+	delete[] buffer;
 	return true;
 }
 

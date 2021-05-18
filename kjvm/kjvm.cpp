@@ -34,6 +34,7 @@ int Execute(std::string strClass)
 	pClass1 = new JavaClass();
 	pClass2 = new JavaClass();
 
+	heap.AddClassRoot("/home/boltu/workspaces/jvm/kjvm/lib");
 	bool bRet=heap.LoadClass(strClass, pClass1);
 	bRet=heap.LoadClass("java/lang/Object", pClass2);
 
@@ -81,7 +82,7 @@ void Test2()
 	std::string path="Test";
 	std::string path2="java\\lang\\Object";
 
-	ClassHeap heap;
+	ClassHeap heap;	
 	JavaClass *pClass1, *pClass2, *pClass3;
 	pClass1 = new JavaClass();
 	pClass2 = new JavaClass();

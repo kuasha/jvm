@@ -4,6 +4,7 @@
 
 #include "types.h"
 #include "constants.h"
+#include <vector>
 
 class ClassHeap;
 class ObjectHeap;
@@ -191,6 +192,7 @@ public:
 private:
 	size_t m_nByteCodeLength;
 	void *m_pByteCode;
+	std::vector<unsigned char> byteCode_;
 	u2	m_nObjectFieldsCount;
 	bool ParseConstantPool(char* &p);
 	int GetConstantPoolSize(char* p);
