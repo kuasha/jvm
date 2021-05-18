@@ -1,0 +1,43 @@
+# algrind -s --leak-check=full ./hmjvm Test
+
+==575408== 
+==575408== HEAP SUMMARY:
+==575408==     in use at exit: 6,972 bytes in 46 blocks
+==575408==   total heap usage: 238 allocs, 192 frees, 145,108 bytes allocated
+==575408== 
+==575408== 1 bytes in 1 blocks are definitely lost in loss record 1 of 32
+==575408==    at 0x4A39723: operator new(unsigned long) (vg_replace_malloc.c:417)
+==575408==    by 0x112D82: ClassHeap::ClassHeap() (ClassHeap.cpp:6)
+==575408==    by 0x10BBFB: Execute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (kjvm.cpp:32)
+==575408==    by 0x10C243: main (kjvm.cpp:77)
+==575408== 
+==575408== 128 bytes in 1 blocks are definitely lost in loss record 17 of 32
+==575408==    at 0x4A3A99F: operator new[](unsigned long) (vg_replace_malloc.c:579)
+==575408==    by 0x119ABC: ObjectHeap::CreateObject(JavaClass*) (ObjectHeap.cpp:24)
+==575408==    by 0x10BE1A: Execute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (kjvm.cpp:56)
+==575408==    by 0x10C243: main (kjvm.cpp:77)
+==575408== 
+==575408== 766 (232 direct, 534 indirect) bytes in 1 blocks are definitely lost in loss record 29 of 32
+==575408==    at 0x4A39723: operator new(unsigned long) (vg_replace_malloc.c:417)
+==575408==    by 0x10BC21: Execute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (kjvm.cpp:35)
+==575408==    by 0x10C243: main (kjvm.cpp:77)
+==575408== 
+==575408== 1,523 (32 direct, 1,491 indirect) bytes in 1 blocks are definitely lost in loss record 31 of 32
+==575408==    at 0x4A3A99F: operator new[](unsigned long) (vg_replace_malloc.c:579)
+==575408==    by 0x119ABC: ObjectHeap::CreateObject(JavaClass*) (ObjectHeap.cpp:24)
+==575408==    by 0x119C29: ObjectHeap::CreateStringObject(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, ClassHeap*) (ObjectHeap.cpp:46)
+==575408==    by 0x118313: ExecutionEngine::LoadConstant(JavaClass*, unsigned char) (ExecutionEngine.cpp:565)
+==575408==    by 0x116118: ExecutionEngine::Execute(Frame*) (ExecutionEngine.cpp:115)
+==575408==    by 0x10C005: Execute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (kjvm.cpp:65)
+==575408==    by 0x10C243: main (kjvm.cpp:77)
+==575408== 
+==575408== LEAK SUMMARY:
+==575408==    definitely lost: 393 bytes in 4 blocks
+==575408==    indirectly lost: 2,025 bytes in 20 blocks
+==575408==      possibly lost: 0 bytes in 0 blocks
+==575408==    still reachable: 4,554 bytes in 22 blocks
+==575408==         suppressed: 0 bytes in 0 blocks
+==575408== Reachable blocks (those to which a pointer was found) are not shown.
+==575408== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==575408== 
+==575408== ERROR SUMMARY: 4 errors from 4 contexts (suppressed: 0 from 0)
