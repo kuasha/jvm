@@ -14,7 +14,7 @@ public class Test implements ITest, ITest2, ITest3, ITest4
 	{		
 		long i=10L;
 		//String str=String.valueOf(i);
-		name = "Super Class Method OK";
+		name = "This is a test print from java class\n";
 		//name += " StringBuilder Test "+i;
 		Print(name);
 		return 2;

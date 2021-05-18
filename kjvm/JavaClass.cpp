@@ -175,10 +175,7 @@ bool JavaClass::ParseMethods(char* &p)
 
 bool JavaClass::ParseConstantPool(char* &p)
 {	
-	constant_pool = new cp_info * [constant_pool_count-1];
-
-	if(constant_pool == NULL) return false;
-	
+	constant_pool.resize(constant_pool_count);	
 
 	for(int i=1;i<constant_pool_count;i++)
 	{
@@ -497,10 +494,20 @@ u4 JavaClass::GetObjectFieldCount(void)
 {
 	u4 count= fields_count;
 	std::string superClass=GetSuperClassName();
-	JavaClass *pSuperClass = m_pClassHeap->GetClass(superClass);
 	u4 superObjFieldCount=0;
-	if(pSuperClass)
-		superObjFieldCount=pSuperClass->GetObjectFieldCount();
+
+	if(superClass.length() < 1) 
+	{
+		// This is probaly java/lang/Object class
+	}
+	else 
+	{
+		JavaClass *pSuperClass = m_pClassHeap->GetClass(superClass);
+		if(pSuperClass)
+		{
+			superObjFieldCount=pSuperClass->GetObjectFieldCount();
+		}
+	}
 
 	count+= superObjFieldCount;
 	return count;

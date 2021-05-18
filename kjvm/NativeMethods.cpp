@@ -21,9 +21,11 @@ Variable Print(RuntimeEnvironment* pRuntimeEnvironment)
 	Variable *pVar=pRuntimeEnvironment->pObjectHeap->GetObjectPointer(object);
 	if(pVar)
 	{
-		std::string *pString = (std::string *)pVar[1].ptrValue;
-		if(pString)
-			printf("%s",*pString);
+		std::string *varValue = (std::string *)pVar[1].ptrValue;		
+		if(varValue)
+		{
+			std::cout << *varValue;
+		}			
 	}
 
 	returnVal.intValue=0;
