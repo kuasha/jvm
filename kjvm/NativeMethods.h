@@ -1,6 +1,7 @@
 #pragma once
 #include "types.h"
-#include "afxmt.h"
+#include <mutex>
+
 class ClassHeap;
 class ObjectHeap;
 
@@ -11,7 +12,7 @@ public:
 	ClassHeap *pClassHeap;
 	ObjectHeap *pObjectHeap;
 
-	CCriticalSection criticalSection;
+	std::mutex criticalSection;
 };
 Variable Add(RuntimeEnvironment* pRuntimeEnvironment);
 Variable Print(RuntimeEnvironment* pRuntimeEnvironment);

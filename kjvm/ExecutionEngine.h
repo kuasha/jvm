@@ -27,8 +27,8 @@ public:
 public:
 	void ExecuteInvokeVirtual(Frame* pFrameStack, u2 type);
 public:
-	u2 GetMethodParametersCount(CString strMethodDesc);
-	u2 GetMethodParametersStackCount(CString strMethodDesc);
+	u2 GetMethodParametersCount(std::string strMethodDesc);
+	u2 GetMethodParametersStackCount(std::string strMethodDesc);
 
 public:
 	u4 ExecuteNativeMethod(Frame* pFrameStack);

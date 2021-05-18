@@ -1,7 +1,8 @@
-#include "StdAfx.h"
 #include "ObjectHeap.h"
 #include "types.h"
 #include "ClassHeap.h"
+#include "JavaClass.h"
+#include <string.h>
 
 ObjectHeap::ObjectHeap(void)
 :m_nNextObjectID(1)
@@ -23,22 +24,22 @@ Object ObjectHeap::CreateObject(JavaClass* pClass)
 	Variable *obj = new Variable[osize];
 	if(!obj) return object;
 	memset(obj, 0, sizeof(Variable)*osize);
-	object.heapPtr=m_nNextObjectID++;
-	obj[0].ptrValue =(LONG_PTR) pClass;
+	object.heapPtr=(void *)m_nNextObjectID++;
+	obj[0].ptrValue =(void*) pClass;
 
-	m_ObjectMap.SetAt((void *)object.heapPtr,obj);
+	m_ObjectMap[(void *)object.heapPtr]=obj;
 
 	return object;
 }
 
-Object ObjectHeap::CreateStringObject(CString* pStrValue, ClassHeap *pClassHeap)
+Object ObjectHeap::CreateStringObject(std::string* pStrValue, ClassHeap *pClassHeap)
 {
 	Object object;	
 	object.heapPtr=NULL;
 	object.type=0;
 
 	if(pClassHeap == NULL) return object;
-	JavaClass *pClass=pClassHeap->GetClass(CString("java/lang/String"));
+	JavaClass *pClass=pClassHeap->GetClass("java/lang/String");
 
 	if(pClass == NULL) return object;	
 
@@ -46,36 +47,37 @@ Object ObjectHeap::CreateStringObject(CString* pStrValue, ClassHeap *pClassHeap)
 	Variable *pVar= this->GetObjectPointer(object);
 	if(pVar==NULL) return object;
 
-	pVar[1].ptrValue=(LONG_PTR)pStrValue;
+	pVar[1].ptrValue=(void*)pStrValue;
 
 	return object;
 }
 
-BOOL ObjectHeap::CreateObjectArray(JavaClass* pClass, u4 count, Object& object)
+bool ObjectHeap::CreateObjectArray(JavaClass* pClass, u4 count, Object& object)
 {
 	Variable *pVar= new Variable[count+1];
 
 	if(pVar)
 	{
 		memset(pVar, 0, sizeof(Variable)*(count+1));
-		pVar[0].ptrValue = (LONG_PTR)pClass;
+		pVar[0].ptrValue = (void*)pClass;
 	}
 	else
-		return FALSE;
+		return false;
 
-	object.heapPtr=m_nNextObjectID++;
+	object.heapPtr=(void*)m_nNextObjectID++;
 	
-	m_ObjectMap.SetAt((void *)object.heapPtr,pVar);
+	m_ObjectMap[(void *)object.heapPtr]=pVar;
 
-	return TRUE;
+	return true;
 }
 
 Variable* ObjectHeap::GetObjectPointer(Object object)
 {
 	void *obj = NULL;
-	if(!m_ObjectMap.Lookup((void *)object.heapPtr, obj))
+	auto it = m_ObjectMap.find((void *)object.heapPtr);
+	if(it == m_ObjectMap.end())
 		return NULL;
-
+	obj=it->second;
 	return (Variable*)obj;
 }
 
@@ -89,10 +91,10 @@ Object ObjectHeap::CreateNewArray(u1 type, i4 count)
 	if(obj)
 	{
 		memset(obj, 0, sizeof(Variable)*(count+1));
-		object.heapPtr=m_nNextObjectID++;
+		object.heapPtr=(void *)m_nNextObjectID++;
 		obj[0].intValue = type;
 
-		m_ObjectMap.SetAt((void *)object.heapPtr,obj);
+		m_ObjectMap[(void *)object.heapPtr] = obj;
 	}
 
 	return object;

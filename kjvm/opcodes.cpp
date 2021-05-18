@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "types.h"
 #include "opcodes.h"
 
 f4 getf4(char *p)
@@ -8,6 +8,7 @@ f4 getf4(char *p)
 	return *((f4 *)&iv);
 }
 
+/*
 TCHAR* OpcodeDesc[]={
 	_T("nop"),
 	_T("aconst_null"),
@@ -212,3 +213,4 @@ TCHAR* OpcodeDesc[]={
 	_T("goto_w"),
 	_T("jsr_w") 
 };
+*/

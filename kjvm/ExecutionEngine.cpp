@@ -1,4 +1,5 @@
-#include "StdAfx.h"
+#include <string.h>
+
 #include "ExecutionEngine.h"
 #include "JavaClass.h"
 #include "types.h"
@@ -7,6 +8,7 @@
 #include "ObjectHeap.h"
 #include "NativeMethods.h"
 
+#define _T(x) x
 
 Variable* Frame::pOpStack; //static
 Frame* Frame::pBaseFrame;
@@ -23,22 +25,22 @@ ExecutionEngine::~ExecutionEngine(void)
 
 u4 ExecutionEngine::Execute(Frame* pFrameStack)
 {
-	ASSERT(pFrameStack);
+	////ASSERT(pFrameStack);
 	Frame* pFrame=&pFrameStack[0];
-	ASSERT(pFrame);
+	////ASSERT(pFrame);
 
 #ifdef DBG_PRINT
-	DbgPrint(_T("Current Frame %ld Stack start at %ld\n"),pFrame-Frame::pBaseFrame, pFrame->stack-Frame::pOpStack );
+	printf(_T("Current Frame %ld Stack start at %ld\n"),pFrame-Frame::pBaseFrame, pFrame->stack-Frame::pOpStack );
 #endif
 
 	if(pFrame->pMethod->access_flags & ACC_NATIVE)
 	{
 
-		DbgPrint(_T("Enter Native Method\n"));
+		printf("Enter Native Method\n");
 
 		ExecuteNativeMethod(pFrame);
 
-		DbgPrint(_T("Exit Native Method\n"));
+		printf("Exit Native Method\n");
 
 		return 0;
 	}
@@ -47,22 +49,22 @@ u4 ExecutionEngine::Execute(Frame* pFrameStack)
 	
 	i4 error=0;
 	JavaClass *pClass = pFrame->pClass;
-	CString strMethod;
+	std::string strMethod;
 	pClass->GetStringFromConstPool(pFrame->pMethod->name_index, strMethod);
 
-	DbgPrint(_T("Execute At Class %s Method %s \n"), pClass->GetName(), strMethod); 
+	printf("Execute At Class %s Method %s \n", pClass->GetName(), strMethod); 
 	i4 index=0;
 	i8 longVal;
 	while(1)
 	{
 
-		DbgPrint(_T("Stack values "));
+		printf("Stack values ");
 		for(int i=0;i<pFrame->sp + pFrame->stack - Frame::pOpStack+1;i++)
 		{
-			DbgPrint(_T("[%d] "), Frame::pOpStack[i].intValue);
+			printf("[%d] ", Frame::pOpStack[i].intValue);
 		}
-		DbgPrint(_T("\n"));
-		DbgPrint(_T("Opcode = %s [%d] Stack=%d [+%d]\n"),OpcodeDesc[(u1)bc[pFrame->pc]], (u1)bc[pFrame->pc], pFrame->sp, pFrame->stack - Frame::pOpStack); 
+		printf("\n");
+		//printf("Opcode = %s [%d] Stack=%d [+%d]\n", OpcodeDesc[(u1)bc[pFrame->pc]], (u1)bc[pFrame->pc], pFrame->sp, pFrame->stack - Frame::pOpStack); 
 		switch(bc[pFrame->pc])
 		{
 		case nop:
@@ -498,13 +500,13 @@ u4 ExecutionEngine::Execute(Frame* pFrameStack)
 			break;
 		//Method return instructions
 		case ireturn: //172 (0xac)			
-			DbgPrint(_T("----IRETURN------\n"));
+			printf("----IRETURN------\n");
 			pFrame->stack[0].intValue=pFrame->stack[pFrame->sp].intValue;			
 			return ireturn;
 			break;
 
 		case _return: //177 (0xb1): Return (void) from method			
-			DbgPrint(_T("----RETURN------\n"));
+			printf("----RETURN------\n");
 			return 0;//METHOD_RETURN;
 			break;
 		//////////////// Thread Synchronization ////////////////////
@@ -522,7 +524,7 @@ u4 ExecutionEngine::Execute(Frame* pFrameStack)
 		if(error) break;
 	}
 	
-	ASSERT(!error);
+	////ASSERT(!error);
 
 	return 0;
 }
@@ -536,8 +538,8 @@ Variable ExecutionEngine::LoadConstant(JavaClass *pClass, u1 nIndex)
 {
 	Variable v;
 	v.ptrValue = 0;
-	CString *pStrVal=NULL, strTemp;
-	//CString strClass= pClass->GetName();
+	std::string *pStrVal=NULL, strTemp;
+	//std::string strClass= pClass->GetName();
 	//ShowClassInfo(pClass);
 
 	char* cp=(char *)pClass->constant_pool[nIndex];
@@ -556,10 +558,10 @@ Variable ExecutionEngine::LoadConstant(JavaClass *pClass, u1 nIndex)
 	case CONSTANT_String:
 		i=getu2((char *)&cp[1]);
 
-		pStrVal = new CString();
+		pStrVal = new std::string();
 		
 		pClass->GetStringFromConstPool(i, strTemp);	
-		pStrVal->Append(strTemp);
+		pStrVal->append(strTemp);
 		object = this->pObjectHeap->CreateStringObject(pStrVal, pClassHeap);
 		v.ptrValue=object.heapPtr;
 		break;
@@ -580,7 +582,7 @@ void ExecutionEngine::PutField(Frame* pFrameStack)
 	Variable value=pFrameStack[0].stack[pFrameStack[0].sp];
 	Variable *pVarList=this->pObjectHeap->GetObjectPointer(obj.object);
 	JavaClass *pClass = (JavaClass *)pVarList[0].ptrValue;
-	ASSERT(pClass && pClass->magic == 0xCAFEBABE);
+	////ASSERT(pClass && pClass->magic == 0xCAFEBABE);
 	//ShowClassInfo(pClass);
 	pVarList[nIndex+1]=value;
 }
@@ -592,7 +594,7 @@ void ExecutionEngine::GetField(Frame* pFrame)
 	
 	Variable *pVarList=this->pObjectHeap->GetObjectPointer(obj.object);
 	JavaClass *pClass = (JavaClass *)pVarList[0].ptrValue;
-	ASSERT(pClass && pClass->magic == 0xCAFEBABE);
+	////ASSERT(pClass && pClass->magic == 0xCAFEBABE);
 	//ShowClassInfo(pClass);
 	pFrame->stack[pFrame->sp]=pVarList[nIndex+1];
 }
@@ -603,7 +605,7 @@ void ExecutionEngine::ExecuteInvokeVirtual(Frame* pFrameStack, u2 type)
 	Variable objectRef = pFrameStack[0].stack[pFrameStack[0].sp]; 
 	char *pConstPool = (char *)pFrameStack[0].pClass->constant_pool[mi];
 
-	ASSERT(pConstPool[0] == CONSTANT_Methodref);
+	////ASSERT(pConstPool[0] == CONSTANT_Methodref);
 		
 	u2 classIndex = getu2(&pConstPool[1]);
 	u2 nameAndTypeIndex = getu2(&pConstPool[3]);
@@ -611,11 +613,11 @@ void ExecutionEngine::ExecuteInvokeVirtual(Frame* pFrameStack, u2 type)
 	//get class at pool index 
 	pConstPool = (char *)pFrameStack[0].pClass->constant_pool[classIndex];
 
-	ASSERT(pConstPool[0] == CONSTANT_Class);
+	////ASSERT(pConstPool[0] == CONSTANT_Class);
 
 	u2 ni=getu2(&pConstPool[1]);
 
-	CString strClassName;
+	std::string strClassName;
 	pFrameStack[0].pClass->GetStringFromConstPool(ni, strClassName);
 
 
@@ -626,7 +628,7 @@ void ExecutionEngine::ExecuteInvokeVirtual(Frame* pFrameStack, u2 type)
 	pConstPool = (char *)pFrameStack[0].pClass->constant_pool[nameAndTypeIndex];
 
 
-	ASSERT(pConstPool[0] == CONSTANT_NameAndType);
+	////ASSERT(pConstPool[0] == CONSTANT_NameAndType);
 
 
 	method_info_ex method;
@@ -637,7 +639,7 @@ void ExecutionEngine::ExecuteInvokeVirtual(Frame* pFrameStack, u2 type)
 
 	method.access_flags = 0; // todo set 
 
-	CString strName, strDesc;
+	std::string strName, strDesc;
 	pFrameStack[0].pClass->GetStringFromConstPool(method.name_index, strName);
 	pFrameStack[0].pClass->GetStringFromConstPool(method.descriptor_index, strDesc);
 
@@ -677,13 +679,13 @@ void ExecutionEngine::ExecuteInvokeVirtual(Frame* pFrameStack, u2 type)
 	
 	pFrameStack[1].stack = &Frame::pOpStack[pFrameStack->stack-Frame::pOpStack+pFrameStack[0].sp-params+1];
 	pFrameStack[1].sp=nDiscardStack-1;
-	DbgPrint(_T("Invoking method %s%s, \n"), strName, strDesc);
-	DbgPrint(_T("Last Frame Stack %d Params %d Stack start at %d\n"),pFrameStack[0].stack-Frame::pOpStack+pFrameStack[0].sp,pFrameStack[1].sp,pFrameStack[1].stack-Frame::pOpStack );
+	printf("Invoking method %s%s, \n", strName.c_str(), strDesc.c_str());
+	printf("Last Frame Stack %d Params %d Stack start at %d\n",pFrameStack[0].stack-Frame::pOpStack+pFrameStack[0].sp,pFrameStack[1].sp,pFrameStack[1].stack-Frame::pOpStack );
 
 	this->Execute(&pFrameStack[1]);
 
 	//if returns then get on stack	
-	if(strDesc.Find(_T(")V")) < 0)
+	if(strDesc.find(")V") < 0)
 	{
 		nDiscardStack--;		
 	}
@@ -691,41 +693,41 @@ void ExecutionEngine::ExecuteInvokeVirtual(Frame* pFrameStack, u2 type)
 	pFrameStack[0].sp-=nDiscardStack;
 }
 
-u2 ExecutionEngine::GetMethodParametersCount(CString strMethodDesc)
+u2 ExecutionEngine::GetMethodParametersCount(std::string strMethodDesc)
 {
 	u2 count=0;
 	
-	int i, len=strMethodDesc.GetLength();
+	int i, len=strMethodDesc.length();
 
 	//todo: long/double takes 2 stack position
 	for(i=1;i<len;i++)
 	{
-		if(strMethodDesc.GetAt(i) =='L')
+		if(strMethodDesc[i] =='L')
 		{
-			while(strMethodDesc.GetAt(i) !=';') i++;
+			while(strMethodDesc[i] !=';') i++;
 		}
-		if(strMethodDesc.GetAt(i) ==')') break;
+		if(strMethodDesc[i] ==')') break;
 		count++;
 	}
 
 	return count;
 }
 
-u2 ExecutionEngine::GetMethodParametersStackCount(CString strMethodDesc)
+u2 ExecutionEngine::GetMethodParametersStackCount(std::string strMethodDesc)
 {
 	u2 count=0;
 	
-	int i, len=strMethodDesc.GetLength();
+	int i, len=strMethodDesc.length();
 
 	//todo: long/double takes 2 stack position
 	for(i=1;i<len;i++)
 	{
-		if(strMethodDesc.GetAt(i) =='L')
+		if(strMethodDesc[i] =='L')
 		{
-			while(strMethodDesc.GetAt(i) !=';') i++;
+			while(strMethodDesc[i] !=';') i++;
 		}
-		if(strMethodDesc.GetAt(i) ==')') break;
-		if(strMethodDesc.GetAt(i) =='J' || strMethodDesc.GetAt(i) =='D')
+		if(strMethodDesc[i] ==')') break;
+		if(strMethodDesc[i] =='J' || strMethodDesc[i] =='D')
 			count++;
 		count++;
 	}
@@ -733,55 +735,55 @@ u2 ExecutionEngine::GetMethodParametersStackCount(CString strMethodDesc)
 	return count;
 }
 
-pNativeMethod GetNativeMethod(CString strSign)
+pNativeMethod GetNativeMethod(std::string strSign)
 {
-	if(FALSE)
+	if(false)
 	{
 	}
-	else if(!strSign.Compare(_T("java/lang/String@valueOf(F)Ljava/lang/String;")))
+	else if(!strSign.compare(_T("java/lang/String@valueOf(F)Ljava/lang/String;")))
 	{
 		return String_valueOf_F;
 	}
-	else if(!strSign.Compare(_T("java/lang/String@valueOf(J)Ljava/lang/String;")))
+	else if(!strSign.compare(_T("java/lang/String@valueOf(J)Ljava/lang/String;")))
 	{
 		return String_valueOf_J;
 	}
-	else if(!strSign.Compare(_T("java/lang/StringBuilder@append(Ljava/lang/String;)Ljava/lang/StringBuilder;")))
+	else if(!strSign.compare(_T("java/lang/StringBuilder@append(Ljava/lang/String;)Ljava/lang/StringBuilder;")))
 	{
 		return StringBuilder_append_String;
 	}
-	else if(!strSign.Compare(_T("java/lang/StringBuilder@append(I)Ljava/lang/StringBuilder;")))
+	else if(!strSign.compare(_T("java/lang/StringBuilder@append(I)Ljava/lang/StringBuilder;")))
 	{
 		return StringBuilder_append_I;
 	}
-	else if(!strSign.Compare(_T("java/lang/StringBuilder@append(C)Ljava/lang/StringBuilder;")))
+	else if(!strSign.compare(_T("java/lang/StringBuilder@append(C)Ljava/lang/StringBuilder;")))
 	{
 		return StringBuilder_append_C;
 	}
-	else if(!strSign.Compare(_T("java/lang/StringBuilder@append(Z)Ljava/lang/StringBuilder;")))
+	else if(!strSign.compare(_T("java/lang/StringBuilder@append(Z)Ljava/lang/StringBuilder;")))
 	{
 		return StringBuilder_append_Z;
 	}
-	else if(!strSign.Compare(_T("java/lang/StringBuilder@append(Ljava/lang/Object;)Ljava/lang/StringBuilder;")))
+	else if(!strSign.compare(_T("java/lang/StringBuilder@append(Ljava/lang/Object;)Ljava/lang/StringBuilder;")))
 	{
 		return StringBuilder_append_Object;
 	}
-	else if(!strSign.Compare(_T("java/lang/StringBuilder@append(F)Ljava/lang/StringBuilder;")))
+	else if(!strSign.compare(_T("java/lang/StringBuilder@append(F)Ljava/lang/StringBuilder;")))
 	{
 		return StringBuilder_append_F;
 	}
-	else if(!strSign.Compare(_T("java/lang/StringBuilder@append(J)Ljava/lang/StringBuilder;")))
+	else if(!strSign.compare(_T("java/lang/StringBuilder@append(J)Ljava/lang/StringBuilder;")))
 	{
 		return StringBuilder_append_J;
 	}
 
 	
 	
-	else if(!strSign.Compare(_T("java/lang/StringBuilder@toString()Ljava/lang/String;")))
+	else if(!strSign.compare(_T("java/lang/StringBuilder@toString()Ljava/lang/String;")))
 	{
 		return StringBuilder_toString_String;
 	}
-	else if(!strSign.Compare(_T("Test@Print(Ljava/lang/String;)V")))
+	else if(!strSign.compare(_T("Test@Print(Ljava/lang/String;)V")))
 	{
 		return Print;
 	}
@@ -791,16 +793,16 @@ pNativeMethod GetNativeMethod(CString strSign)
 
 u4 ExecutionEngine::ExecuteNativeMethod(Frame* pFrameStack)
 {
-	ASSERT(pFrameStack);
+	////ASSERT(pFrameStack);
 	Frame* pFrame=&pFrameStack[0];
-	ASSERT(pFrame->pMethod->access_flags & ACC_NATIVE);
+	////ASSERT(pFrame->pMethod->access_flags & ACC_NATIVE);
 
 	JavaClass *pClass = pFrame->pClass;
-	CString strClassName, strMethod, strDesc, strSignature;
+	std::string strClassName, strMethod, strDesc, strSignature;
 	strClassName=pClass->GetName();
 	pClass->GetStringFromConstPool(pFrame->pMethod->name_index, strMethod);
 	pClass->GetStringFromConstPool(pFrame->pMethod->descriptor_index, strDesc);
-	DbgPrint(_T("Execute At Class %s Method %s%s  \n"),strClassName , strMethod, strDesc);
+	printf(_T("Execute At Class %s Method %s%s  \n"),strClassName , strMethod, strDesc);
 	strSignature=strClassName+_T("@")+strMethod+strDesc;
 	pNativeMethod pNativeMethod=GetNativeMethod(strSignature);
 	RuntimeEnvironment rte;
@@ -813,14 +815,14 @@ u4 ExecutionEngine::ExecuteNativeMethod(Frame* pFrameStack)
 		// what should I do here??
 		// System Panic
 
-		ASSERT(FALSE);
+		//ASSERT(false);
 	}
 	else
 	{
 		Variable retVal = pNativeMethod(&rte);
 
 		//if returns then get on stack	
-		if(strDesc.Find(_T(")V")) < 0)
+		if(strDesc.find(_T(")V")) < 0)
 		{
 			//todo validate
 			pFrame->stack[0]=retVal;
@@ -887,6 +889,6 @@ void ExecutionEngine::DumpObject(Object object)
 		return;
 	}
 
-	DbgPrint(_T("Load Class %s\n"),cls->GetName());
+	printf(_T("Load Class %s\n"),cls->GetName());
 #endif
 }

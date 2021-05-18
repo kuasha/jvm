@@ -1,7 +1,7 @@
-#include "StdAfx.h"
 #include "FilePathManager.h"
-#include "shlwapi.h"
-#pragma comment(lib,"shlwapi.lib")
+#include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 FilePathManager::FilePathManager(void)
 {
@@ -11,16 +11,14 @@ FilePathManager::~FilePathManager(void)
 {
 }
 
-BOOL FilePathManager::GetAbsolutePath(CString strRelativePath, CString& strAbsolutePath)
+bool FilePathManager::GetAbsolutePath(std::string strRelativePath, std::string& strAbsolutePath)
 {
-	TCHAR path[MAX_PATH+1];
+	fs::path p = strRelativePath;
 
-	GetCurrentDirectory(MAX_PATH, path);
+	strAbsolutePath = fs::absolute(p);
 
-	strAbsolutePath = path+(_T("\\")+strRelativePath);
+	if(!fs::exists(p)) 
+		return false;
 
-	if(!PathFileExists(strAbsolutePath)) 
-		return FALSE;
-
-	return TRUE;
+	return true;
 }

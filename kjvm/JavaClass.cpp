@@ -1,6 +1,10 @@
-#include "StdAfx.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <stdio.h>
+#include <string.h>
+
 #include "JavaClass.h"
-#include "shlwapi.h"
 #include "ClassHeap.h"
 #include "ObjectHeap.h"
 
@@ -22,49 +26,26 @@ JavaClass::~JavaClass(void)
 }
 
 
-BOOL JavaClass::LoadClassFromFile(CString lpszFilePath)
+bool JavaClass::LoadClassFromFile(std::string lpszFilePath)
 {
     u1 *p;
     size_t lenRead, len;
 
-	CFile file;
-	CFileException e;
+	std::ifstream file(lpszFilePath.c_str(), std::ios::binary | std::ios::ate);
+	std::streamsize size = file.tellg();
+	file.seekg(0, std::ios::beg);
 
-	ASSERT(PathFileExists(lpszFilePath));
-	if(!PathFileExists(lpszFilePath)) return FALSE;
-
-	BOOL bRet=file.Open(lpszFilePath, CFile::modeRead, &e);
-	ASSERT(bRet);
-	if(!bRet) return FALSE;
-
-	len=(size_t)file.GetLength();	    
-    
-    m_nByteCodeLength = len;
-
-    p = (u1 *) new u1[len+2];
-    if (p != NULL)
-    {
-		lenRead=file.Read(p, (UINT)len);
-        if (len != lenRead)
-        {
-            delete p;
-            p = NULL;
-        }
-    }
-    else
+	std::vector<unsigned char> buffer(size+1);
+	if (file.read((char *)buffer.data(), size))
 	{
-		file.Close();
-		return FALSE;
+		p = &buffer[0]; //TODO: use vector to store
+		SetByteCode(p);		
+		return true;
 	}
-	file.Close();
-
-    if (p)
+	else
 	{
-		p[len] = 0;
-		SetByteCode(p);
+		return false;
 	}
-
-	return (p != NULL);
 }
 
 void JavaClass::SetByteCode(void* pByteCode)
@@ -75,11 +56,11 @@ void JavaClass::SetByteCode(void* pByteCode)
 	if(m_pByteCode) ParseClass();
 }
 
-BOOL JavaClass::ParseClass(void)
+bool JavaClass::ParseClass(void)
 {
 	//just to be safe
 	if(m_pByteCode==NULL || m_nByteCodeLength < sizeof(JavaClassFileFormat)+20)
-		return FALSE;
+		return false;
 
 	char *p=(char *)m_pByteCode;
 
@@ -126,11 +107,11 @@ BOOL JavaClass::ParseClass(void)
 	return 0;
 }
 
-BOOL JavaClass::ParseAttributes(char* &p)
+bool JavaClass::ParseAttributes(char* &p)
 {
 	attributes = new attribute_info*[attributes_count];
 
-	if(methods == NULL) return FALSE;
+	if(methods == NULL) return false;
 	
 
 	for(int i=0;i<attributes_count;i++)
@@ -143,15 +124,15 @@ BOOL JavaClass::ParseAttributes(char* &p)
 
 	}
 
-	return TRUE;
+	return true;
 }
 
 //TODO: Cashe the findings here
-BOOL JavaClass::ParseMethods(char* &p)
+bool JavaClass::ParseMethods(char* &p)
 {
 	methods = new method_info_ex[methods_count];
 
-	if(methods == NULL) return FALSE;
+	if(methods == NULL) return false;
 	
 	for(int i=0;i<methods_count;i++)
 	{
@@ -162,7 +143,7 @@ BOOL JavaClass::ParseMethods(char* &p)
 		methods[i].descriptor_index= getu2(p); p+=2; //descriptor_index
 		methods[i].attributes_count=getu2(p); p+=2;
 		
-		CString strName, strDesc;
+		std::string strName, strDesc;
 		GetStringFromConstPool(methods[i].name_index, strName);
 		GetStringFromConstPool(methods[i].descriptor_index, strDesc);
 
@@ -188,14 +169,14 @@ BOOL JavaClass::ParseMethods(char* &p)
 		}		
 	}
 
-	return TRUE;
+	return true;
 }
 
-BOOL JavaClass::ParseConstantPool(char* &p)
+bool JavaClass::ParseConstantPool(char* &p)
 {	
 	constant_pool = new cp_info*[constant_pool_count-1];
 
-	if(constant_pool == NULL) return FALSE;
+	if(constant_pool == NULL) return false;
 	
 
 	for(int i=1;i<constant_pool_count;i++)
@@ -214,14 +195,14 @@ BOOL JavaClass::ParseConstantPool(char* &p)
 		}
 	}
 
-	return TRUE;
+	return true;
 }
 
-BOOL JavaClass::ParseFields(char* &p)
+bool JavaClass::ParseFields(char* &p)
 {
 	fields = new field_info_ex[fields_count];
 
-	if(fields == NULL) return FALSE;
+	if(fields == NULL) return false;
 	
 
 	for(int i=0;i<fields_count;i++)
@@ -248,10 +229,10 @@ BOOL JavaClass::ParseFields(char* &p)
 		
 	}
 
-	return TRUE;
+	return true;
 
 }
-BOOL JavaClass::ParseInterfaces(char* &p)
+bool JavaClass::ParseInterfaces(char* &p)
 {	
 	interfaces = new u2[interfaces_count];
 	
@@ -261,7 +242,7 @@ BOOL JavaClass::ParseInterfaces(char* &p)
 		//printf("Interface at %d\n",interfaces[i]); 
 	}
 
-	return TRUE;
+	return true;
 }
 
 int JavaClass::GetConstantPoolSize(char* p)
@@ -293,16 +274,16 @@ int JavaClass::GetConstantPoolSize(char* p)
 	case CONSTANT_Utf8:
 		return 3+getu2(p+1);
 	default:
-		ASSERT(FALSE);
+		//ASSERT(false);
 		break;
 	}
 
 	return 0;
 }
 
-BOOL JavaClass::GetConstantPool(u2 nIndex, cp_info& const_pool)
+bool JavaClass::GetConstantPool(u2 nIndex, cp_info& const_pool)
 {
-	if(nIndex>constant_pool_count-1) return FALSE;
+	if(nIndex>constant_pool_count-1) return false;
 
 	char *cpool= (char *)constant_pool[nIndex];
 
@@ -327,15 +308,15 @@ BOOL JavaClass::GetConstantPool(u2 nIndex, cp_info& const_pool)
 	return 0;
 }
 
-BOOL JavaClass::GetStringFromConstPool(int nIndex, CString& strValue)
+bool JavaClass::GetStringFromConstPool(int nIndex, std::string& strValue)
 {
 
 	if(nIndex<1 || nIndex >= constant_pool_count)
 	{
-		return FALSE;
+		return false;
 	}
 	if(constant_pool[nIndex]->tag != CONSTANT_Utf8)
-		return FALSE;
+		return false;
 
 	u1 *p =(u1 *)constant_pool[nIndex];
 
@@ -345,12 +326,12 @@ BOOL JavaClass::GetStringFromConstPool(int nIndex, CString& strValue)
 	memcpy(buffer, &p[3], length);
 	strValue += buffer;
 	delete buffer;
-	return TRUE;
+	return true;
 }
 
-CString JavaClass::GetName(void)
+std::string JavaClass::GetName(void)
 {
-	CString retVal=_T("");
+	std::string retVal="";
 	if(constant_pool[this_class]->tag != CONSTANT_Class)
 		return retVal;
 	char *bc=(char*)constant_pool[this_class];
@@ -359,9 +340,9 @@ CString JavaClass::GetName(void)
 	return retVal;
 }
 
-CString JavaClass::GetSuperClassName(void)
+std::string JavaClass::GetSuperClassName(void)
 {
-	CString retVal=_T("");
+	std::string retVal="";
 	if(super_class<1) return retVal;
 
 	if(constant_pool[super_class]->tag != CONSTANT_Class)
@@ -372,9 +353,9 @@ CString JavaClass::GetSuperClassName(void)
 	return retVal;
 }
 
-BOOL JavaClass::ParseMethodCodeAttribute(int nMethodIndex, Code_attribute* pCode_attr)
+bool JavaClass::ParseMethodCodeAttribute(int nMethodIndex, Code_attribute* pCode_attr)
 {
-	if(methods==NULL || nMethodIndex > methods_count) return FALSE;
+	if(methods==NULL || nMethodIndex > methods_count) return false;
 	char *pMi, *bc;
 	pMi= bc = (char *)methods[nMethodIndex].pMethodInfoBase;
 	bc+=6;
@@ -386,10 +367,10 @@ BOOL JavaClass::ParseMethodCodeAttribute(int nMethodIndex, Code_attribute* pCode
 		for(int a=0;a<nAttributes;a++)
 		{
 			u2 name_index=getu2(bc); bc+=2;		
-			CString strAttributeName;
+			std::string strAttributeName;
 			GetStringFromConstPool(name_index, strAttributeName);
 			// may be we can compare indexe directly??
-			if(!strAttributeName.CompareNoCase(_T("Code")))
+			if(!strAttributeName.compare("Code"))
 			{
 				char *ca=bc;
 				pCode_attr->attribute_name_index=name_index;//already scanned;
@@ -440,9 +421,9 @@ BOOL JavaClass::ParseMethodCodeAttribute(int nMethodIndex, Code_attribute* pCode
 	return 0;
 }
 
-int JavaClass::GetMethodIndex(CString strMethodName, CString strMethodDesc,JavaClass* &pClass)
+int JavaClass::GetMethodIndex(std::string strMethodName, std::string strMethodDesc,JavaClass* &pClass)
 {
-	if(methods == NULL) return FALSE;
+	if(methods == NULL) return false;
 	
 	JavaClass* pCurClass=this;
 	while(pCurClass)
@@ -450,14 +431,14 @@ int JavaClass::GetMethodIndex(CString strMethodName, CString strMethodDesc,JavaC
 		//_tprintf(_T("Searching class %s\n"), pCurClass->GetName());
 		for(int i=0;i<pCurClass->methods_count;i++)
 		{
-			CString name, desc;
+			std::string name, desc;
 
 			pCurClass->GetStringFromConstPool(pCurClass->methods[i].name_index, name);
-			if(name.Compare(strMethodName)) continue;
+			if(name.compare(strMethodName)) continue;
 
 			pCurClass->GetStringFromConstPool(pCurClass->methods[i].descriptor_index, desc);
 
-			if(!desc.Compare(strMethodDesc))
+			if(!desc.compare(strMethodDesc))
 			{
 				if(pClass)
 					pClass = pCurClass;
@@ -479,15 +460,15 @@ int JavaClass::GetMethodIndex(CString strMethodName, CString strMethodDesc,JavaC
 	return -1;
 }
 
-int JavaClass::GetFieldIndex(CString strName, CString& strDesc)
+int JavaClass::GetFieldIndex(std::string strName, std::string& strDesc)
 {
-	if(fields == NULL) return FALSE;
+	if(fields == NULL) return false;
 	
 	for(int i=0;i<fields_count;i++)
 	{
-		CString name, desc;
+		std::string name, desc;
 		GetStringFromConstPool(fields[i].name_index, name);
-		if(name.Compare(strName)) continue;
+		if(name.compare(strName)) continue;
 
 		GetStringFromConstPool(fields[i].descriptor_index, desc);
 
@@ -501,7 +482,7 @@ int JavaClass::GetFieldIndex(CString strName, CString& strDesc)
 u4 JavaClass::GetObjectSize(void)
 {
 	u4 size= fields_count * sizeof(Variable);
-	CString superClass=GetSuperClassName();
+	std::string superClass=GetSuperClassName();
 	JavaClass *pSuperClass = m_pClassHeap->GetClass(superClass);
 	u4 superObjSize=0;
 	if(pSuperClass)
@@ -514,7 +495,7 @@ u4 JavaClass::GetObjectSize(void)
 u4 JavaClass::GetObjectFieldCount(void)
 {
 	u4 count= fields_count;
-	CString superClass=GetSuperClassName();
+	std::string superClass=GetSuperClassName();
 	JavaClass *pSuperClass = m_pClassHeap->GetClass(superClass);
 	u4 superObjFieldCount=0;
 	if(pSuperClass)
@@ -526,47 +507,47 @@ u4 JavaClass::GetObjectFieldCount(void)
 
 JavaClass* JavaClass::GetSuperClass(void)
 {
-	CString superClass=GetSuperClassName();
+	std::string superClass=GetSuperClassName();
 	JavaClass *pSuperClass = m_pClassHeap->GetClass(superClass);
 
 	return pSuperClass;
 }
 
-BOOL JavaClass::CreateObject(u2 index, ObjectHeap *pObjectHeap, Object& object)
+bool JavaClass::CreateObject(u2 index, ObjectHeap *pObjectHeap, Object& object)
 {
 	char *cp=(char*)this->constant_pool[index];
-	ASSERT(cp[0] == CONSTANT_Class);
-	ASSERT(pObjectHeap);
+	//ASSERT(cp[0] == CONSTANT_Class);
+	//ASSERT(pObjectHeap);
 	if(cp[0] != CONSTANT_Class)
-		return FALSE;
+		return false;
 
 	u2 name_index=getu2(&cp[1]);
-	CString strClassName;
+	std::string strClassName;
 	if(!this->GetStringFromConstPool(name_index, strClassName))
-		return FALSE;
+		return false;
 	
-	DbgPrint("Creating new object of class [%ws]\n", strClassName);
+	printf("Creating new object of class [%ws]\n", strClassName);
 
 	JavaClass *pNewClass=this->m_pClassHeap->GetClass(strClassName);
-	if(pNewClass == NULL) return FALSE;
+	if(pNewClass == NULL) return false;
 	object=pObjectHeap->CreateObject(pNewClass);
-	return TRUE;
+	return true;
 }
 
-BOOL JavaClass::CreateObjectArray(u2 index, u4 count, ObjectHeap *pObjectHeap, Object& object)
+bool JavaClass::CreateObjectArray(u2 index, u4 count, ObjectHeap *pObjectHeap, Object& object)
 {
 	char *cp=(char*)this->constant_pool[index];
-	ASSERT(cp[0] == CONSTANT_Class);
-	ASSERT(pObjectHeap);
+	//ASSERT(cp[0] == CONSTANT_Class);
+	//ASSERT(pObjectHeap);
 	if(cp[0] != CONSTANT_Class)
-		return FALSE;
+		return false;
 
 	u2 name_index=getu2(&cp[1]);
-	CString strClassName;
+	std::string strClassName;
 	if(!this->GetStringFromConstPool(name_index, strClassName))
-		return FALSE;
+		return false;
 	JavaClass *pNewClass=this->m_pClassHeap->GetClass(strClassName);
-	if(pNewClass == NULL) return FALSE;
+	if(pNewClass == NULL) return false;
 
 	return pObjectHeap->CreateObjectArray(pNewClass, count, object);
 }

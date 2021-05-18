@@ -1,4 +1,6 @@
 #pragma once
+#include "types.h"
+#include "ClassHeap.h"
 
 class ObjectHeap
 {
@@ -9,11 +11,11 @@ public:
 public:
 	virtual Variable* GetObjectPointer(Object object);
 	Object CreateObject(JavaClass* pClass);
-	Object CreateStringObject(CString* pStrValue, ClassHeap *pClassHeap);
+	Object CreateStringObject(std::string* pStrValue, ClassHeap *pClassHeap);
 	Object CreateNewArray(u1 type, i4 count);
-	BOOL CreateObjectArray(JavaClass* pClass, u4 count, Object& object);
+	bool CreateObjectArray(JavaClass* pClass, u4 count, Object& object);
 private:
-	CMapPtrToPtr m_ObjectMap;
+	std::map<void*, void*> m_ObjectMap;
 	u4 m_nNextObjectID;
 
 };

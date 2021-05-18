@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "ClassHeap.h"
 #include "JavaClass.h"
 #include "FilePathManager.h"
@@ -12,45 +11,50 @@ ClassHeap::~ClassHeap(void)
 	
 }
 
-BOOL ClassHeap::AddClass(JavaClass* pJavaClass)
+bool ClassHeap::AddClass(JavaClass* pJavaClass)
 {
-	if(!pJavaClass) return FALSE;
-	CString name=pJavaClass->GetName();
+	if(!pJavaClass) return false;
+	std::string name=pJavaClass->GetName();
 
 	//TODO- check if already exists
 
-	m_ClassMap.SetAt(name, pJavaClass);
-	return TRUE;
+	m_ClassMap[name]=pJavaClass;
+	return true;
 }
 
-JavaClass* ClassHeap::GetClass(CString strClassName)
+JavaClass* ClassHeap::GetClass(std::string strClassName)
 {
-	void *pClass=NULL;
-	if(!m_ClassMap.Lookup(strClassName, pClass))
+	JavaClass *pClass=NULL;
+	auto it = m_ClassMap.find(strClassName);
+	if(it == m_ClassMap.end())
 	{
 		pClass = new JavaClass();
-		BOOL bRet=this->LoadClass(strClassName, (JavaClass*)pClass);
+		bool bRet=this->LoadClass(strClassName, pClass);
 		if(!bRet)
 		{
 			delete pClass;
 			pClass=NULL;
 		}		
 	}
+	else 
+	{
+		pClass = (JavaClass*)it->second;
+	}
 
-	return (JavaClass*)pClass;
+	return pClass;
 }
 
-BOOL ClassHeap::LoadClass(CString strClassName, JavaClass *pClass)
+bool ClassHeap::LoadClass(std::string strClassName, JavaClass *pClass)
 {
-	CString path, relPath;
-	if(!pClass) return FALSE;
-	relPath=strClassName+_T(".class");
+	std::string path, relPath;
+	if(!pClass) return false;
+	relPath=strClassName+".class";
 	if(!pFilePathManager->GetAbsolutePath(relPath, path))
-		return FALSE;	
+		return false;	
 
-	BOOL bRet=pClass->LoadClassFromFile(path);
+	bool bRet=pClass->LoadClassFromFile(path);
 
-	if(!bRet) return FALSE;
+	if(!bRet) return false;
 
 	pClass->SetClassHeap(this);
 

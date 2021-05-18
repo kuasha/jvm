@@ -1,6 +1,10 @@
 #pragma once
+#include <iostream>
+#include <string>
+
 #include "types.h"
 #include "constants.h"
+
 class ClassHeap;
 class ObjectHeap;
 
@@ -34,7 +38,7 @@ struct CONSTANT_InterfaceMethodref_info {
     	u2 name_and_type_index;
 };
 
-struct CONSTANT_String_info {
+struct CONSTANT_string_info {
     	u1 tag;
     	u2 string_index;
     };
@@ -162,33 +166,33 @@ public:
 	virtual ~JavaClass(void);
 
 public:
-	virtual BOOL LoadClassFromFile(CString lpszFilePath);
+	virtual bool LoadClassFromFile(std::string lpszFilePath);
 	void SetByteCode(void* pByteCode);
 
-	BOOL ParseClass(void);
-	BOOL ParseInterfaces(char* &p);
-	BOOL ParseFields(char* &p);
-	BOOL ParseMethods(char* &p);
-	BOOL ParseAttributes(char* &p);
-	BOOL GetConstantPool(u2 nIndex, cp_info& const_pool);
+	bool ParseClass(void);
+	bool ParseInterfaces(char* &p);
+	bool ParseFields(char* &p);
+	bool ParseMethods(char* &p);
+	bool ParseAttributes(char* &p);
+	bool GetConstantPool(u2 nIndex, cp_info& const_pool);
 
-	BOOL GetStringFromConstPool(int nIndex,CString& strValue);
-	CString GetName(void);
-	CString GetSuperClassName(void);
-	BOOL ParseMethodCodeAttribute(int nMethodIndex, Code_attribute* pCode_attr);
-	int GetMethodIndex(CString strMethodName, CString strMethodDesc,JavaClass* &pClass);
-	int GetFieldIndex(CString strName, CString& strDesc);
+	bool GetStringFromConstPool(int nIndex,std::string& strValue);
+	std::string GetName(void);
+	std::string GetSuperClassName(void);
+	bool ParseMethodCodeAttribute(int nMethodIndex, Code_attribute* pCode_attr);
+	int GetMethodIndex(std::string strMethodName, std::string strMethodDesc,JavaClass* &pClass);
+	int GetFieldIndex(std::string strName, std::string& strDesc);
 	void SetClassHeap(ClassHeap *pClassHeap){this->m_pClassHeap=pClassHeap;}
 	virtual u4 GetObjectSize(void);
 	virtual u4 GetObjectFieldCount(void);
 	JavaClass* GetSuperClass(void);
-	BOOL CreateObject(u2 index, ObjectHeap *pObjectHeap, Object& object);
-	BOOL CreateObjectArray(u2 index, u4 count, ObjectHeap *pObjectHeap, Object& object);
+	bool CreateObject(u2 index, ObjectHeap *pObjectHeap, Object& object);
+	bool CreateObjectArray(u2 index, u4 count, ObjectHeap *pObjectHeap, Object& object);
 private:
 	size_t m_nByteCodeLength;
 	void *m_pByteCode;
 	u2	m_nObjectFieldsCount;
-	BOOL ParseConstantPool(char* &p);
+	bool ParseConstantPool(char* &p);
 	int GetConstantPoolSize(char* p);
 	ClassHeap *m_pClassHeap;
 };

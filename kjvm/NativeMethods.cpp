@@ -1,8 +1,7 @@
-#include "stdafx.h"
-
 #include "NativeMethods.h"
 #include "ObjectHeap.h"
 #include "ClassHeap.h"
+#include "JavaClass.h"
 
 Variable Add(RuntimeEnvironment* pRuntimeEnvironment)
 {
@@ -22,9 +21,9 @@ Variable Print(RuntimeEnvironment* pRuntimeEnvironment)
 	Variable *pVar=pRuntimeEnvironment->pObjectHeap->GetObjectPointer(object);
 	if(pVar)
 	{
-		CString *pString = (CString *)pVar[1].ptrValue;
+		std::string *pString = (std::string *)pVar[1].ptrValue;
 		if(pString)
-			wprintf(_T("%s"),*pString);
+			printf("%s",*pString);
 	}
 
 	returnVal.intValue=0;
@@ -41,8 +40,7 @@ Variable String_valueOf_F(RuntimeEnvironment* pRuntimeEnvironment)
 	//static method
 	f4 floatVal=pFrame->stack[0].floatValue;
 
-	CString str;
-	str.Format(_T("%f"), floatVal);
+	std::string str = std::to_string(floatVal);
 	returnVal.object=pRuntimeEnvironment->pObjectHeap->CreateStringObject(&str, pRuntimeEnvironment->pClassHeap);			
 	
 	return returnVal;
@@ -58,7 +56,7 @@ Variable String_valueOf_J(RuntimeEnvironment* pRuntimeEnvironment)
 	////static method
 	//f4 floatVal=pFrame->stack[0].floatValue;
 
-	//CString str;
+	//std::string str;
 	//str.Format(_T("%f"), floatVal);
 	//returnVal.object=pRuntimeEnvironment->pObjectHeap->CreateStringObject(&str, pRuntimeEnvironment->pClassHeap);			
 	
@@ -68,7 +66,7 @@ Variable String_valueOf_J(RuntimeEnvironment* pRuntimeEnvironment)
 //Method java/lang/StringBuilder.append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 Variable StringBuilder_append_String(RuntimeEnvironment* pRuntimeEnvironment)
 {
-	// we put a CString object as the first field in StringBuilder object
+	// we put a std::string object as the first field in StringBuilder object
 
 	Variable returnVal;
 	Frame *pFrame=&pRuntimeEnvironment->pFrameStack[0];
@@ -81,18 +79,18 @@ Variable StringBuilder_append_String(RuntimeEnvironment* pRuntimeEnvironment)
 
 	if(pVar && pThisVar)
 	{
-		CString *pString = (CString *)pVar[1].ptrValue;
-		CString *pThisString = (CString *)pThisVar[1].ptrValue;
+		std::string *pString = (std::string *)pVar[1].ptrValue;
+		std::string *pThisString = (std::string *)pThisVar[1].ptrValue;
 
 		if(pThisVar[1].ptrValue==NULL)
 		{
-			pThisVar[1].ptrValue=(LONG_PTR) (pThisString=new CString());
+			pThisVar[1].ptrValue=(void*) (pThisString=new std::string());
 		}
 
 		if(pThisString && pString)
 		{
 			//We now use...
-			pThisString->Append(pString->GetBuffer());
+			pThisString->append(*pString);
 		}
 	}
 	
@@ -113,19 +111,18 @@ Variable StringBuilder_append_I(RuntimeEnvironment* pRuntimeEnvironment)
 
 	if(pThisVar)
 	{		
-		CString *pThisString = (CString *)pThisVar[1].ptrValue;
+		std::string *pThisString = (std::string *)pThisVar[1].ptrValue;
 
 		if(pThisVar[1].ptrValue==NULL)
 		{
-			pThisVar[1].ptrValue=(LONG_PTR) (pThisString=new CString());
+			pThisVar[1].ptrValue=(void*) (pThisString=new std::string());
 		}
 
 		if(pThisString)
 		{
 			//We now use...
-			CString str;
-			str.Format(_T("%d"), intVal);
-			pThisString->Append(str.GetBuffer());
+			std::string str = std::to_string(intVal);
+			pThisString->append(str);
 		}
 	}
 	
@@ -147,19 +144,18 @@ Variable StringBuilder_append_C(RuntimeEnvironment* pRuntimeEnvironment)
 
 	if(pThisVar)
 	{		
-		CString *pThisString = (CString *)pThisVar[1].ptrValue;
+		std::string *pThisString = (std::string *)pThisVar[1].ptrValue;
 
 		if(pThisVar[1].ptrValue==NULL)
 		{
-			pThisVar[1].ptrValue=(LONG_PTR) (pThisString=new CString());
+			pThisVar[1].ptrValue=(void*) (pThisString=new std::string());
 		}
 
 		if(pThisString)
 		{
 			//We now use...
-			CString str;
-			str.Format(_T("%c"), charValue);
-			pThisString->Append(str.GetBuffer());
+			std::string str = std::to_string(charValue);
+			pThisString->append(str);
 		}
 	}
 	
@@ -181,19 +177,18 @@ Variable StringBuilder_append_Z(RuntimeEnvironment* pRuntimeEnvironment)
 
 	if(pThisVar)
 	{		
-		CString *pThisString = (CString *)pThisVar[1].ptrValue;
+		std::string *pThisString = (std::string *)pThisVar[1].ptrValue;
 
 		if(pThisVar[1].ptrValue==NULL)
 		{
-			pThisVar[1].ptrValue=(LONG_PTR) (pThisString=new CString());
+			pThisVar[1].ptrValue=(void*) (pThisString=new std::string());
 		}
 
 		if(pThisString)
 		{
 			//We now use...
-			CString str;
-			str.Format(_T("%ws"), boolValue?_T("true"):_T("false"));
-			pThisString->Append(str.GetBuffer());
+			std::string str = boolValue?"true":"false";
+			pThisString->append(str);
 		}
 	}
 	
@@ -216,19 +211,18 @@ Variable StringBuilder_append_F(RuntimeEnvironment* pRuntimeEnvironment)
 
 	if(pThisVar)
 	{		
-		CString *pThisString = (CString *)pThisVar[1].ptrValue;
+		std::string *pThisString = (std::string *)pThisVar[1].ptrValue;
 
 		if(pThisVar[1].ptrValue==NULL)
 		{
-			pThisVar[1].ptrValue=(LONG_PTR) (pThisString=new CString());
+			pThisVar[1].ptrValue=(void*) (pThisString=new std::string());
 		}
 
 		if(pThisString)
 		{
 			//We now use...
-			CString str;
-			str.Format(_T("%f"), floatValue);
-			pThisString->Append(str.GetBuffer());
+			std::string str = std::to_string(floatValue);
+			pThisString->append(str);
 		}
 	}
 	
@@ -256,19 +250,18 @@ Variable StringBuilder_append_J(RuntimeEnvironment* pRuntimeEnvironment)
 
 	if(pThisVar)
 	{		
-		CString *pThisString = (CString *)pThisVar[1].ptrValue;
+		std::string *pThisString = (std::string *)pThisVar[1].ptrValue;
 
 		if(pThisVar[1].ptrValue==NULL)
 		{
-			pThisVar[1].ptrValue=(LONG_PTR) (pThisString=new CString());
+			pThisVar[1].ptrValue=(void*) (pThisString=new std::string());
 		}
 
 		if(pThisString)
 		{
 			//We now use...
-			CString str;
-			str.Format(_T("%I64d"), longValue);
-			pThisString->Append(str.GetBuffer());
+			std::string str=std::to_string(longValue);
+			pThisString->append(str);
 		}
 	}
 	
@@ -298,17 +291,17 @@ Variable StringBuilder_append_D(RuntimeEnvironment* pRuntimeEnvironment)
 
 	if(pThisVar)
 	{		
-		CString *pThisString = (CString *)pThisVar[1].ptrValue;
+		std::string *pThisString = (std::string *)pThisVar[1].ptrValue;
 
 		if(pThisVar[1].ptrValue==NULL)
 		{
-			pThisVar[1].ptrValue=(LONG_PTR) (pThisString=new CString());
+			pThisVar[1].ptrValue=(void*) (pThisString=new std::string());
 		}
 
 		if(pThisString)
 		{
 			//We now use...
-			CString str;
+			std::string str;
 			str.Format(_T("%f"), floatValue);
 			pThisString->Append(str.GetBuffer());
 		}
@@ -339,25 +332,30 @@ Variable StringBuilder_append_Object(RuntimeEnvironment* pRuntimeEnvironment)
 	if(pThisVar)
 	{
 		
-		CString *pThisString = (CString *)pThisVar[1].ptrValue;
+		std::string *pThisString = (std::string *)pThisVar[1].ptrValue;
 
-		CString str;
+		std::string str;
 		if(pVar)
 		{
 			JavaClass *pClass = (JavaClass *)pVar[0].ptrValue;		
-			str.Format(_T("Object [%X] of Class %ws"),object.heapPtr, pClass->GetName());
+			str.append("Object ");
+			str.append(std::to_string((long long)object.heapPtr));
+			str.append(" Class ");
+			str.append(pClass->GetName());
 		}
 		else
-			str=_T("null");
+		{
+			str="null";
+		}
 
 
 		if(pThisVar[1].ptrValue==NULL)
 		{
-			pThisVar[1].ptrValue = (LONG_PTR)(pThisString=new CString());
+			pThisVar[1].ptrValue = (void*)(pThisString=new std::string());
 		}
 		if(pThisString)
 		{
-			pThisString->Append(str);
+			pThisString->append(str);
 		}
 	}
 	
@@ -369,7 +367,7 @@ Variable StringBuilder_append_Object(RuntimeEnvironment* pRuntimeEnvironment)
 
 Variable StringBuilder_toString_String(RuntimeEnvironment* pRuntimeEnvironment)
 {
-	// we put a CString object as the first field in StringBuilder object
+	// we put a std::string object as the first field in StringBuilder object
 
 	Variable returnVal;
 	returnVal.object.heapPtr=NULL;
@@ -383,11 +381,11 @@ Variable StringBuilder_toString_String(RuntimeEnvironment* pRuntimeEnvironment)
 
 	if(pThisVar)
 	{
-		CString *pThisString = (CString *)pThisVar[1].ptrValue;
+		std::string *pThisString = (std::string *)pThisVar[1].ptrValue;
 
 		if(pThisVar[1].ptrValue==NULL)
 		{
-			pThisVar[1].ptrValue=(LONG_PTR) (pThisString=new CString());
+			pThisVar[1].ptrValue=(void*) (pThisString=new std::string());
 		}
 
 		if(pThisString)

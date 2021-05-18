@@ -1,11 +1,13 @@
 #pragma once
+#include <iostream>
+#include <stdint.h>
 
 typedef unsigned int u4;
 typedef unsigned short u2;
 typedef unsigned char u1;
 
-typedef __int64 i8;
-typedef unsigned __int64 u8;
+typedef int64_t i8;
+typedef unsigned long long u8;
 
 typedef int i4;
 typedef short i2;
@@ -38,7 +40,7 @@ struct method_info_ex;
 class Object
 {
 public:
-	LONG_PTR heapPtr;
+	void* heapPtr;
 	u1 type;
 };
 
@@ -48,7 +50,7 @@ union Variable
 	u2 shortValue;
 	u4 intValue;
 	f4 floatValue;
-	LONG_PTR ptrValue;
+	void* ptrValue;
 	Object object;
 };
 

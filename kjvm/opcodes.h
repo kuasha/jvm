@@ -1,5 +1,5 @@
 #pragma once
-extern TCHAR* OpcodeDesc[];
+//extern std::vector<std::string> OpcodeDesc;
 
 #define nop 0
 #define aconst_null 1 /*(0x1)*/ 

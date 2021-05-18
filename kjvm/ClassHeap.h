@@ -1,19 +1,21 @@
 #pragma once
+#include <map>
+
 class JavaClass;
 class FilePathManager;
 
 class ClassHeap
 {
-	CMapStringToPtr m_ClassMap;
+	std::map<std::string, void*> m_ClassMap;
 	FilePathManager *pFilePathManager;
 public:
 	ClassHeap(void);
 public:
 	virtual ~ClassHeap(void);
 public:
-	BOOL AddClass(JavaClass* pJavaClass);
-	JavaClass* GetClass(CString strClassName);
-	BOOL LoadClass(CString strClassName, JavaClass *pClass);
+	bool AddClass(JavaClass* pJavaClass);
+	JavaClass* GetClass(std::string strClassName);
+	bool LoadClass(std::string strClassName, JavaClass *pClass);
 
 
 };
