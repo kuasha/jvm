@@ -85,6 +85,23 @@ struct CONSTANT_Utf8_info
 	u1 *bytes; //[length];
 };
 
+struct CONSTANT_MethodHandle_info {
+    u1 tag;
+    u1 reference_kind;
+    u2 reference_index;
+};
+
+struct CONSTANT_MethodType_info {
+    u1 tag;
+    u2 descriptor_index;
+};
+
+struct CONSTANT_InvokeDynamic_info {
+    u1 tag;
+    u2 bootstrap_method_attr_index;
+    u2 name_and_type_index;
+};
+
 struct attribute_info
 {
 	u2 attribute_name_index;
@@ -105,6 +122,7 @@ struct field_info_ex : public field_info
 {
 	field_info *pFieldInfoBase;
 };
+
 struct method_info
 {
 	u2 access_flags;
@@ -120,6 +138,7 @@ struct ConstantValue_attribute
 	u4 attribute_length;
 	u2 constantvalue_index;
 };
+
 struct Exception_table
 {
 	u2 start_pc;
@@ -148,6 +167,38 @@ struct method_info_ex : method_info
 	Code_attribute *pCode_attr;
 };
 
+struct bootstrap_methods {   
+	u2 bootstrap_method_ref;
+    u2 num_bootstrap_arguments;
+	// JVM Spec: 4.7.21
+	// Each entry in the bootstrap_arguments array must be a valid index into the constant_pool table. 
+	// The constant_pool entry at that index must be a CONSTANT_String_info, 
+	// CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info, CONSTANT_Float_info, 
+	// CONSTANT_Double_info, CONSTANT_MethodHandle_info, or CONSTANT_MethodType_info structure
+    std::vector<u2> bootstrap_arguments; //[num_bootstrap_arguments];
+};
+
+struct BootstrapMethods_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 num_bootstrap_methods;
+    std::vector<bootstrap_methods *> bootstrap_methods_; //[num_bootstrap_methods];
+};
+struct inner_class_info 
+{   u2 inner_class_info_index;
+        u2 outer_class_info_index;
+        u2 inner_name_index;
+        u2 inner_class_access_flags;
+};
+
+struct InnerClasses_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 number_of_classes;
+
+    std::vector<inner_class_info> classes; //[number_of_classes];
+};
+
 struct JavaClassFileFormat
 {
 	u4 magic;
@@ -166,6 +217,7 @@ struct JavaClassFileFormat
 	std::vector<method_info_ex> methods; //[methods_count];
 	u2 attributes_count;
 	std::vector<attribute_info *> attributes; //[attributes_count];
+	BootstrapMethods_attribute *pBootstrapMethods_attribute_;  // name=BootstrapMethods
 };
 
 class JavaClass : public JavaClassFileFormat
@@ -176,7 +228,6 @@ public:
 
 public:
 	virtual bool LoadClassFromFile(std::string lpszFilePath);
-	void SetByteCode(void *pByteCode);
 
 	bool ParseClass(void);
 	bool ParseInterfaces(char *&p);
@@ -199,12 +250,16 @@ public:
 	bool CreateObjectArray(u2 index, u4 count, ObjectHeap *pObjectHeap, Object &object);
 
 private:
+	void SetByteCode(void *pByteCode);
+	bool ParseConstantPool(char *&p);
+	int GetConstantPoolSize(char *p);
+	bool ParseClassBootstrapMethodsAttribute();
+	bool ParseInnerClasses();
+
 	size_t m_nByteCodeLength;
 	void *m_pByteCode;
 	std::vector<u1> byteCode_;
 	u2 m_nObjectFieldsCount;
-	bool ParseConstantPool(char *&p);
-	int GetConstantPoolSize(char *p);
 	ClassHeap *m_pClassHeap;
 };
 

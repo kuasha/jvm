@@ -1,4 +1,4 @@
-# algrind -s --leak-check=full ./hmjvm Test
+# valgrind -s --leak-check=full ./hmjvm Test
 
 ==575408== 
 ==575408== HEAP SUMMARY:

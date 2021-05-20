@@ -13,9 +13,9 @@ public class Test implements ITest, ITest2, ITest3, ITest4
 	public int Entry()
 	{		
 		long i=10L;
-		//String str=String.valueOf(i);
+		String str=String.valueOf(i);
 		name = "This is a test print from java class\n";
-		//name += " StringBuilder Test "+i;
+		name += " StringBuilder Test " + i;
 		Print(name);
 		return 2;
 	}

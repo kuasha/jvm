@@ -25,7 +25,6 @@ JavaClass::~JavaClass(void)
 
 bool JavaClass::LoadClassFromFile(std::string lpszFilePath)
 {
-	u1 *p;
 	size_t lenRead, len;
 
 	std::ifstream file(lpszFilePath.c_str(), std::ios::binary | std::ios::ate);
@@ -35,8 +34,8 @@ bool JavaClass::LoadClassFromFile(std::string lpszFilePath)
 	byteCode_.reserve(size + 1);
 	if (file.read((char *)byteCode_.data(), size))
 	{
-		p = &byteCode_[0]; //TODO: use vector to store
 		m_nByteCodeLength = size;
+		u1 *p = &byteCode_[0];
 		SetByteCode(p);
 		return true;
 	}
@@ -48,8 +47,6 @@ bool JavaClass::LoadClassFromFile(std::string lpszFilePath)
 
 void JavaClass::SetByteCode(void *pByteCode)
 {
-	if (m_pByteCode)
-		delete m_pByteCode;
 	m_pByteCode = pByteCode;
 
 	if (m_pByteCode)
@@ -113,7 +110,9 @@ bool JavaClass::ParseClass(void)
 	//printf("Class attributes_count = %d\n", attributes_count);
 
 	if (attributes_count > 0)
+	{
 		ParseAttributes(p);
+	}
 
 	return 0;
 }
@@ -125,14 +124,76 @@ bool JavaClass::ParseAttributes(char *&p)
 	for (int i = 0; i < attributes_count; i++)
 	{
 		attributes[i] = (attribute_info *)p;
-		u2 name_index = getu2(p);
+		u2 name_index = getu2(p);		
 		p += 2; //attribute_name_index
 		u4 len = getu4(p);
 		p += 4; //len
 		p += len;
+		//attributes[i]->info = (u1*)p;
 	}
 
+	ParseClassBootstrapMethodsAttribute();
+	ParseInnerClasses();
+	
 	return true;
+}
+
+bool JavaClass::ParseClassBootstrapMethodsAttribute()
+{
+	for (int i = 0; i < attributes_count; i++)
+	{
+		char *p = (char *) attributes[i];		
+		u2 name_index = getu2(p);
+		p += 2; //attribute_name_index
+		u4 len = getu4(p);
+		p += 4; //len
+
+		std::string strAttributeName;
+		GetStringFromConstPool(name_index, strAttributeName);		
+		if (!strAttributeName.compare("BootstrapMethods"))
+		{			
+			std::cout << "Found BootstrapMethods" << std::endl;
+			pBootstrapMethods_attribute_ = new BootstrapMethods_attribute();
+
+			pBootstrapMethods_attribute_->attribute_name_index = name_index;
+			pBootstrapMethods_attribute_->attribute_length = len;
+			u2 num_bootstrap_methods = getu2(p);
+			p += 2;
+			pBootstrapMethods_attribute_->num_bootstrap_methods = num_bootstrap_methods;
+
+			std::cout << "num_bootstrap_methods " << num_bootstrap_methods << std::endl;
+			pBootstrapMethods_attribute_->bootstrap_methods_.reserve(num_bootstrap_methods);
+
+			for(int m=0; m<num_bootstrap_methods; m++) 
+			{
+				auto method = new bootstrap_methods;
+				method->bootstrap_method_ref = getu2(p);
+				p+=2;
+				method->num_bootstrap_arguments = getu2(p);
+				p+=2;
+
+				for(int a=0; a < method->num_bootstrap_arguments; a++) 
+				{
+					u2 argi = getu2(p);
+					p+=2;
+					method->bootstrap_arguments.push_back(argi);
+				}
+
+				pBootstrapMethods_attribute_->bootstrap_methods_[m] = method;
+				std::cout << "bootstrap method ref = " << method->bootstrap_method_ref << std::endl;				
+			}
+			return true;
+		}
+	}
+
+	//not found
+	pBootstrapMethods_attribute_ = nullptr;
+	return false;
+}
+
+bool JavaClass::ParseInnerClasses()
+{
+	return false;
 }
 
 //TODO: Cache the findings here
@@ -260,6 +321,9 @@ bool JavaClass::ParseInterfaces(char *&p)
 int JavaClass::GetConstantPoolSize(char *p)
 {
 	cp_info *cp = (cp_info *)p;
+	u2 len;
+	u1 a, b;
+	char *op;
 
 	switch (cp->tag)
 	{
@@ -284,9 +348,19 @@ int JavaClass::GetConstantPoolSize(char *p)
 	case CONSTANT_NameAndType:
 		return 5;
 	case CONSTANT_Utf8:
-		return 3 + getu2(p + 1);
+		op = p + 1;
+		a = op[0];
+		b = op[1];
+		len = (u2)(a << 8 & 0x0000FF00 | b);
+		return 3 + len;
+	case CONSTANT_MethodHandle:
+		return 4;
+	case CONSTANT_MethodType:
+		return 3;
+	case CONSTANT_InvokeDynamic:
+		return 5;
 	default:
-		//ASSERT(false);
+		assert(false);
 		break;
 	}
 
@@ -328,17 +402,17 @@ bool JavaClass::GetStringFromConstPool(int nIndex, std::string &strValue)
 	{
 		return false;
 	}
+
 	if (constant_pool[nIndex]->tag != CONSTANT_Utf8)
+	{
+		assert(false);
 		return false;
+	}
 
 	u1 *p = (u1 *)constant_pool[nIndex];
 
 	short length = getu2(&p[1]);
-	char *buffer = new char[length + 1];
-	buffer[length] = 0;
-	memcpy(buffer, &p[3], length);
-	strValue += buffer;
-	delete[] buffer;
+	strValue.append((char *)&p[3], length);
 	return true;
 }
 
@@ -552,8 +626,8 @@ JavaClass *JavaClass::GetSuperClass(void)
 bool JavaClass::CreateObject(u2 index, ObjectHeap *pObjectHeap, Object &object)
 {
 	char *cp = (char *)this->constant_pool[index];
-	//ASSERT(cp[0] == CONSTANT_Class);
-	//ASSERT(pObjectHeap);
+	assert(cp[0] == CONSTANT_Class);
+	assert(pObjectHeap);
 	if (cp[0] != CONSTANT_Class)
 		return false;
 
@@ -574,8 +648,8 @@ bool JavaClass::CreateObject(u2 index, ObjectHeap *pObjectHeap, Object &object)
 bool JavaClass::CreateObjectArray(u2 index, u4 count, ObjectHeap *pObjectHeap, Object &object)
 {
 	char *cp = (char *)this->constant_pool[index];
-	//ASSERT(cp[0] == CONSTANT_Class);
-	//ASSERT(pObjectHeap);
+	assert(cp[0] == CONSTANT_Class);
+	assert(pObjectHeap);
 	if (cp[0] != CONSTANT_Class)
 		return false;
 

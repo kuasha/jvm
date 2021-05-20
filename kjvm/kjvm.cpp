@@ -2,8 +2,8 @@
 //
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
-#include "stdafx.h"
 #include "kjvm.h"
 #include "JavaClass.h"
 #include "ClassHeap.h"
@@ -97,7 +97,7 @@ void Test2()
 		u2 intr=pClass3->interfaces[i];
 		std::string name;
 		cp_info *pi=pClass3->constant_pool[intr];
-		//ASSERT(pi->tag == CONSTANT_Class);
+		assert(pi->tag == CONSTANT_Class);
 		char *p=(char *)pi;
 		int ni=getu2((char *)(&p[1]));
 		pClass3->GetStringFromConstPool(ni, name);
@@ -162,7 +162,7 @@ void ShowClassInfo(JavaClass* pClass)
 		u2 intr=pClass->interfaces[i];
 		std::string name;
 		cp_info *pi=pClass->constant_pool[intr];
-		//ASSERT(pi->tag == CONSTANT_Class);
+		assert(pi->tag == CONSTANT_Class);
 		char *p=(char *)pi;
 		int ni=getu2((char *)(&p[1]));
 		pClass->GetStringFromConstPool(ni, name);

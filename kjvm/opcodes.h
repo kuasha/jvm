@@ -117,6 +117,8 @@
 #define invokespecial  183 /*(0xb7) */
 #define invokestatic 184 
 
+#define invokedynamic 186 /*(0xba) */
+
 #define _new 187 /*(0xbb)*/
 
 #define newarray 188 /*(0xbc)*/

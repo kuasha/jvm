@@ -10,7 +10,10 @@
 #define CONSTANT_Long  5  
 #define CONSTANT_Double  6  
 #define CONSTANT_NameAndType  12  
-#define CONSTANT_Utf8  1  
+#define CONSTANT_Utf8  1
+#define CONSTANT_MethodHandle 15
+#define CONSTANT_MethodType 16
+#define CONSTANT_InvokeDynamic 18  
 
 #define ACC_PUBLIC  0x0001 /*Declared public; may be accessed from outside its package.  */
 #define ACC_FINAL  0x0010  /*Declared final; no subclasses allowed.  */
