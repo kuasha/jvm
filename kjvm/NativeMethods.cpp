@@ -32,6 +32,12 @@ Variable Print(RuntimeEnvironment* pRuntimeEnvironment)
 	return returnVal;	
 }
 
+// public native String makeConcatWithConstants(String a, long b);
+Variable java_lang_invoke_StringConcatFactory_makeConcatWithConstants_String_J(RuntimeEnvironment* pRuntimeEnvironment)
+{
+
+}
+
 Variable String_valueOf_F(RuntimeEnvironment* pRuntimeEnvironment)
 {
 	Variable returnVal;

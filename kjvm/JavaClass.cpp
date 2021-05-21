@@ -3,6 +3,8 @@
 #include <vector>
 #include <stdio.h>
 #include <string.h>
+
+// I.6: Prefer Expects() for expressing preconditions
 #include <assert.h>
 
 #include "JavaClass.h"
@@ -55,7 +57,8 @@ void JavaClass::SetByteCode(void *pByteCode)
 
 bool JavaClass::ParseClass(void)
 {
-	//just to be safe
+	//just to be safe 
+	//TODO: Expects
 	if (m_pByteCode == NULL || m_nByteCodeLength < sizeof(JavaClassFileFormat) + 20)
 		return false;
 
@@ -121,6 +124,7 @@ bool JavaClass::ParseAttributes(char *&p)
 {
 	attributes.reserve(attributes_count);
 
+	// TODO: P.3: Express intent (use gsl::index)
 	for (int i = 0; i < attributes_count; i++)
 	{
 		attributes[i] = (attribute_info *)p;
@@ -138,6 +142,7 @@ bool JavaClass::ParseAttributes(char *&p)
 	return true;
 }
 
+//TODO: P.11: Encapsulate messy constructs, rather than spreading through the code
 bool JavaClass::ParseClassBootstrapMethodsAttribute()
 {
 	for (int i = 0; i < attributes_count; i++)
@@ -247,6 +252,7 @@ bool JavaClass::ParseMethods(char *&p)
 
 bool JavaClass::ParseConstantPool(char *&p)
 {
+	//TODO: P.5: Prefer compile-time checking to run-time checking (use push_back here)
 	constant_pool.resize(constant_pool_count);
 
 	for (int i = 1; i < constant_pool_count; i++)
@@ -369,6 +375,7 @@ int JavaClass::GetConstantPoolSize(char *p)
 
 bool JavaClass::GetConstantPool(u2 nIndex, cp_info &const_pool)
 {
+	// Expects - this should not happen
 	if (nIndex > constant_pool_count - 1)
 		return false;
 

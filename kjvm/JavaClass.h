@@ -85,21 +85,24 @@ struct CONSTANT_Utf8_info
 	u1 *bytes; //[length];
 };
 
-struct CONSTANT_MethodHandle_info {
-    u1 tag;
-    u1 reference_kind;
-    u2 reference_index;
+struct CONSTANT_MethodHandle_info
+{
+	u1 tag;
+	u1 reference_kind;
+	u2 reference_index;
 };
 
-struct CONSTANT_MethodType_info {
-    u1 tag;
-    u2 descriptor_index;
+struct CONSTANT_MethodType_info
+{
+	u1 tag;
+	u2 descriptor_index;
 };
 
-struct CONSTANT_InvokeDynamic_info {
-    u1 tag;
-    u2 bootstrap_method_attr_index;
-    u2 name_and_type_index;
+struct CONSTANT_InvokeDynamic_info
+{
+	u1 tag;
+	u2 bootstrap_method_attr_index;
+	u2 name_and_type_index;
 };
 
 struct attribute_info
@@ -167,36 +170,40 @@ struct method_info_ex : method_info
 	Code_attribute *pCode_attr;
 };
 
-struct bootstrap_methods {   
+struct bootstrap_methods
+{
 	u2 bootstrap_method_ref;
-    u2 num_bootstrap_arguments;
+	u2 num_bootstrap_arguments;
 	// JVM Spec: 4.7.21
-	// Each entry in the bootstrap_arguments array must be a valid index into the constant_pool table. 
-	// The constant_pool entry at that index must be a CONSTANT_String_info, 
-	// CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info, CONSTANT_Float_info, 
+	// Each entry in the bootstrap_arguments array must be a valid index into the constant_pool table.
+	// The constant_pool entry at that index must be a CONSTANT_String_info,
+	// CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info, CONSTANT_Float_info,
 	// CONSTANT_Double_info, CONSTANT_MethodHandle_info, or CONSTANT_MethodType_info structure
-    std::vector<u2> bootstrap_arguments; //[num_bootstrap_arguments];
+	std::vector<u2> bootstrap_arguments; //[num_bootstrap_arguments];
 };
 
-struct BootstrapMethods_attribute {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 num_bootstrap_methods;
-    std::vector<bootstrap_methods *> bootstrap_methods_; //[num_bootstrap_methods];
+struct BootstrapMethods_attribute
+{
+	u2 attribute_name_index;
+	u4 attribute_length;
+	u2 num_bootstrap_methods;
+	std::vector<bootstrap_methods *> bootstrap_methods_; //[num_bootstrap_methods];
 };
-struct inner_class_info 
-{   u2 inner_class_info_index;
-        u2 outer_class_info_index;
-        u2 inner_name_index;
-        u2 inner_class_access_flags;
+struct inner_class_info
+{
+	u2 inner_class_info_index;
+	u2 outer_class_info_index;
+	u2 inner_name_index;
+	u2 inner_class_access_flags;
 };
 
-struct InnerClasses_attribute {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 number_of_classes;
+struct InnerClasses_attribute
+{
+	u2 attribute_name_index;
+	u4 attribute_length;
+	u2 number_of_classes;
 
-    std::vector<inner_class_info> classes; //[number_of_classes];
+	std::vector<inner_class_info> classes; //[number_of_classes];
 };
 
 struct JavaClassFileFormat
@@ -216,10 +223,19 @@ struct JavaClassFileFormat
 	u2 methods_count;
 	std::vector<method_info_ex> methods; //[methods_count];
 	u2 attributes_count;
-	std::vector<attribute_info *> attributes; //[attributes_count];
-	BootstrapMethods_attribute *pBootstrapMethods_attribute_;  // name=BootstrapMethods
+	std::vector<attribute_info *> attributes;				  //[attributes_count];
+	BootstrapMethods_attribute *pBootstrapMethods_attribute_; // name=BootstrapMethods
 };
 
+// TODO: P.6: What cannot be checked at compile time should be checkable at run time
+// Avoid (try to) pointers that can not be checked for limits
+
+//TODO: P.8: Don’t leak any resources (use RAII)
+
+//TODO: I.4: Make interfaces precisely and strongly typed (avoid char * - use vector instead etc.)
+
+//TODO: I.11: Never transfer ownership by a raw pointer (T*) or reference (T&)
+//TODO: I.12: Declare a pointer that must not be null as not_null
 class JavaClass : public JavaClassFileFormat
 {
 public:

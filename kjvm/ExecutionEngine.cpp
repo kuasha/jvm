@@ -610,6 +610,32 @@ void ExecutionEngine::GetField(Frame *pFrame)
 	pFrame->stack[pFrame->sp] = pVarList[nIndex + 1];
 }
 
+/*
+struct CONSTANT_NameAndType_info
+{
+	u1 tag;
+	u2 name_index;
+	u2 descriptor_index;
+};
+*/
+void PrintNameAndTypeInfo(Frame *pFrameStack, CONSTANT_NameAndType_info *nameAndType)
+{
+	assert(nameAndType && nameAndType->tag == CONSTANT_NameAndType);
+	u1* nt = (u1*) nameAndType;
+	auto name_index = getu2(&nt[1]);
+	auto descriptor_index = getu2(&nt[3]);
+
+	std::string name, desc;
+
+	assert(pFrameStack[0].pClass->constant_pool[name_index]->tag == CONSTANT_Utf8);
+	assert(pFrameStack[0].pClass->constant_pool[descriptor_index]->tag == CONSTANT_Utf8);
+
+	pFrameStack[0].pClass->GetStringFromConstPool(name_index, name);
+	pFrameStack[0].pClass->GetStringFromConstPool(descriptor_index, desc);
+
+	std::cout << "Name and type: " << name << "->" << desc << std::endl;
+}
+
 void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
 {
 	u2 cp_index = getu2(&pFrameStack[0].pMethod->pCode_attr->code[pFrameStack[0].pc + 1]);	
@@ -622,10 +648,39 @@ void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
 	dynInfo.bootstrap_method_attr_index = getu2(&pConstPool[1]);
 	dynInfo.name_and_type_index = getu2(&pConstPool[3]);
 
-	auto method_ref = (int) pFrameStack[0].pClass->pBootstrapMethods_attribute_->bootstrap_methods_[dynInfo.bootstrap_method_attr_index]->bootstrap_method_ref;
+	auto bootstrap_method = pFrameStack[0].pClass->pBootstrapMethods_attribute_->bootstrap_methods_[dynInfo.bootstrap_method_attr_index];
+	auto method_ref = (int) bootstrap_method->bootstrap_method_ref;
 	auto method_handle = pFrameStack[0].pClass->constant_pool[method_ref];
-	auto method_name_type = pFrameStack[0].pClass->constant_pool[dynInfo.name_and_type_index];
 	assert(method_handle->tag == CONSTANT_MethodHandle);
+
+	auto nmh = (char *) method_handle;
+	auto handle_ref_kind = nmh[1];
+	auto handle_ref_index = getu2(&nmh[2]);
+
+	std::cout<< "Ref Kind: " << handle_ref_kind << std::endl;
+	std::cout<< "Ref Index: " << handle_ref_index << std::endl;
+
+	auto method_info = (char *) pFrameStack[0].pClass->constant_pool[handle_ref_index];
+	auto method_class_index = getu2(&method_info[1]);
+	auto method_name_type_index = getu2(&method_info[3]);
+
+	auto handle_method_class =  pFrameStack[0].pClass->constant_pool[method_class_index];
+	auto handle_method_name_type =  pFrameStack[0].pClass->constant_pool[method_name_type_index];
+
+	assert(handle_method_class->tag == CONSTANT_Class);
+	assert(handle_method_name_type->tag == CONSTANT_NameAndType);
+
+	u2 handle_name_index = getu2(&((char*)handle_method_class)[1]);
+	std::string name;
+	pFrameStack[0].pClass->GetStringFromConstPool(handle_name_index, name);
+	std::cout << name << std::endl;
+
+	PrintNameAndTypeInfo(pFrameStack, (CONSTANT_NameAndType_info *) handle_method_name_type);
+
+	std::cout << "Bootstrap argument 0 index: " <<  bootstrap_method->bootstrap_arguments[0] 
+				<< "Tag: "<< (int) pFrameStack[0].pClass->constant_pool[bootstrap_method->bootstrap_arguments[0]]->tag << std::endl;
+
+	auto method_name_type = pFrameStack[0].pClass->constant_pool[dynInfo.name_and_type_index];
 	assert(method_name_type->tag == CONSTANT_NameAndType);
 
 	std::string method_name, desc;
@@ -787,6 +842,10 @@ pNativeMethod GetNativeMethod(std::string strSign)
 {
 	if (false)
 	{
+	}
+	else if(strSign.compare("java/lang/invoke/StringConcatFactory@makeConcatWithConstants(Ljava/lang/String;J)Ljava/lang/String;"))
+	{
+		return java_lang_invoke_StringConcatFactory_makeConcatWithConstants_String_J;
 	}
 	else if (!strSign.compare("java/lang/String@valueOf(F)Ljava/lang/String;"))
 	{

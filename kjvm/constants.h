@@ -1,5 +1,6 @@
 #pragma once
 
+//TODO: P.1: Express ideas directly in code, use enums
 #define CONSTANT_Class  7  
 #define CONSTANT_Fieldref  9  
 #define CONSTANT_Methodref  10  
