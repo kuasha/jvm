@@ -17,6 +17,7 @@ public class Test implements ITest, ITest2, ITest3, ITest4
 		name = "This is a test print from java class\n";
 		name += " StringBuilder Test " + i;
 		Print(name);
+		Print("Hello world\n");
 		return 2;
 	}
 	public int add(int a, int b)

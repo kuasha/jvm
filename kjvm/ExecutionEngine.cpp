@@ -9,6 +9,8 @@
 #include "ObjectHeap.h"
 #include "NativeMethods.h"
 
+#include "opcodes.h"
+
 Variable *Frame::pOpStack; //static
 Frame *Frame::pBaseFrame;
 
@@ -64,6 +66,8 @@ u4 ExecutionEngine::Execute(Frame *pFrameStack)
 			printf("[%d] ", Frame::pOpStack[i].intValue);
 		}
 		printf("\n");
+
+		std::cout << "PC: " << (int) bc[pFrame->pc] << " " << OpcodeDesc[bc[pFrame->pc]] << std::endl;
 #endif
 		//printf("Opcode = %s [%d] Stack=%d [+%d]\n", OpcodeDesc[(u1)bc[pFrame->pc]], (u1)bc[pFrame->pc], pFrame->sp, pFrame->stack - Frame::pOpStack);
 		switch (bc[pFrame->pc])
@@ -618,9 +622,10 @@ struct CONSTANT_NameAndType_info
 	u2 descriptor_index;
 };
 */
+
 void PrintNameAndTypeInfo(Frame *pFrameStack, CONSTANT_NameAndType_info *nameAndType)
 {
-	assert(nameAndType && nameAndType->tag == CONSTANT_NameAndType);
+	assert(pFrameStack && nameAndType && nameAndType->tag == CONSTANT_NameAndType);
 	u1* nt = (u1*) nameAndType;
 	auto name_index = getu2(&nt[1]);
 	auto descriptor_index = getu2(&nt[3]);
@@ -634,6 +639,23 @@ void PrintNameAndTypeInfo(Frame *pFrameStack, CONSTANT_NameAndType_info *nameAnd
 	pFrameStack[0].pClass->GetStringFromConstPool(descriptor_index, desc);
 
 	std::cout << "Name and type: " << name << "->" << desc << std::endl;
+}
+
+void PrintStringInfo(Frame *pFrameStack, u2 string_index)
+{
+	assert(pFrameStack);
+	u1* sp = (u1*) pFrameStack[0].pClass->constant_pool[string_index];
+	assert((int)sp[0] == CONSTANT_String);
+
+	auto name_index = getu2(&sp[1]);
+	std::string name;
+
+	assert(pFrameStack[0].pClass->constant_pool[name_index]->tag == CONSTANT_Utf8);
+
+	pFrameStack[0].pClass->GetStringFromConstPool(name_index, name);
+	std::cout << "String: " << name  << std::endl;
+	assert(name[0] == '\001');
+	assert(name[21] == '\001');
 }
 
 void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
@@ -657,7 +679,7 @@ void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
 	auto handle_ref_kind = nmh[1];
 	auto handle_ref_index = getu2(&nmh[2]);
 
-	std::cout<< "Ref Kind: " << handle_ref_kind << std::endl;
+	std::cout<< "Ref Kind: " << (int) handle_ref_kind << std::endl;
 	std::cout<< "Ref Index: " << handle_ref_index << std::endl;
 
 	auto method_info = (char *) pFrameStack[0].pClass->constant_pool[handle_ref_index];
@@ -675,10 +697,14 @@ void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
 	pFrameStack[0].pClass->GetStringFromConstPool(handle_name_index, name);
 	std::cout << name << std::endl;
 
+	// name and type of the bootstrap class
 	PrintNameAndTypeInfo(pFrameStack, (CONSTANT_NameAndType_info *) handle_method_name_type);
 
 	std::cout << "Bootstrap argument 0 index: " <<  bootstrap_method->bootstrap_arguments[0] 
 				<< "Tag: "<< (int) pFrameStack[0].pClass->constant_pool[bootstrap_method->bootstrap_arguments[0]]->tag << std::endl;
+
+	// argument
+	PrintStringInfo(pFrameStack, bootstrap_method->bootstrap_arguments[0]);
 
 	auto method_name_type = pFrameStack[0].pClass->constant_pool[dynInfo.name_and_type_index];
 	assert(method_name_type->tag == CONSTANT_NameAndType);
@@ -695,8 +721,26 @@ void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
 		std::cout << method_name << desc << std::endl;
 	}
 
+	int params = GetMethodParametersStackCount(desc) + 1;
+
+	//static
+	// if (type == invokestatic)
+	// 	params--;
+
+	int nDiscardStack = params;
+	if (pFrameStack[1].pMethod->access_flags & ACC_NATIVE)
+	{
+	}
+	else
+	{
+		nDiscardStack += pFrameStack[1].pMethod->pCode_attr->max_locals;
+	}
+
+	pFrameStack[1].stack = &Frame::pOpStack[pFrameStack->stack - Frame::pOpStack + pFrameStack[0].sp - params + 1];
+	pFrameStack[1].sp = 2+nDiscardStack - 1;
+
 	// TODO: implement rest of the logic
-	assert(false);
+	pFrameStack[0].sp -= 2;
 }
 
 void ExecutionEngine::ExecuteInvokeVirtual(Frame *pFrameStack, u2 type)
@@ -907,7 +951,7 @@ u4 ExecutionEngine::ExecuteNativeMethod(Frame *pFrameStack)
 	pClass->GetStringFromConstPool(pFrame->pMethod->name_index, strMethod);
 	pClass->GetStringFromConstPool(pFrame->pMethod->descriptor_index, strDesc);
 #ifdef DBG_PRINT
-	printf("Execute At Class %s Method %s%s  \n"),strClassName , strMethod, strDesc);
+	printf("Execute At Class %s Method %s%s  \n",strClassName, strMethod, strDesc);
 #endif
 	strSignature = strClassName + "@" + strMethod + strDesc;
 	pNativeMethod pNativeMethod = GetNativeMethod(strSignature);

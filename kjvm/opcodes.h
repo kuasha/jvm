@@ -1,5 +1,5 @@
 #pragma once
-//extern std::vector<std::string> OpcodeDesc;
+extern std::vector<std::string> OpcodeDesc;
 
 #define nop 0
 #define aconst_null 1 /*(0x1)*/ 
@@ -96,7 +96,6 @@
 #define ifgt 157 /*(0x9d) */
 #define ifle 158 /*(0x9e)*/
 
-
 #define if_icmpeq 159 /*(0x9f) */
 #define if_icmpne 160 /*(0xa0) */
 #define if_icmplt 161 /*(0xa1) */
@@ -104,8 +103,9 @@
 #define if_icmpgt 163 /*(0xa3) */
 #define if_icmple 164 /*(0xa4)*/
 
-
 #define _goto 167 /*(0xa7)*/
+
+#define tableswitch 170 /* todo */
 
 #define ireturn 172 /*(0xac)*/
 #define _return 177 /*(0xb1)*/
@@ -115,18 +115,17 @@
 
 #define invokevirtual 182 /*(0xb6)*/
 #define invokespecial  183 /*(0xb7) */
-#define invokestatic 184 
-
-#define invokedynamic 186 /*(0xba) */
+#define invokestatic 184
+#define invokeinterface 185 /* todo */
+#define invokedynamic 186 /* todo (0xba) */
 
 #define _new 187 /*(0xbb)*/
 
 #define newarray 188 /*(0xbc)*/
 #define anewarray 189 /*(0xbd)*/
-
+#define arraylength 190 /* todo */
 #define athrow 191 /* (0xbf) */
 #define checkcast 192 /* (0xc0) */
 #define instanceof 193 /* (0xc1) */ 
 #define monitorenter 194 /* (0xc2) */
 #define monitorexit 195 /* (0xc3) */
-

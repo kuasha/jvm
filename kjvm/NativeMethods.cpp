@@ -35,7 +35,20 @@ Variable Print(RuntimeEnvironment* pRuntimeEnvironment)
 // public native String makeConcatWithConstants(String a, long b);
 Variable java_lang_invoke_StringConcatFactory_makeConcatWithConstants_String_J(RuntimeEnvironment* pRuntimeEnvironment)
 {
+	Variable returnVal;
+	Frame *pFrame=&pRuntimeEnvironment->pFrameStack[0];
+	Object object=pFrame->stack[pFrame->sp].object;
+	Variable *pVar=pRuntimeEnvironment->pObjectHeap->GetObjectPointer(object);
+	if(pVar)
+	{
+		std::string *varValue = (std::string *)pVar[1].ptrValue;
+		if(varValue)
+		{
+			returnVal.ptrValue = varValue;
+		}			
+	}
 
+	return returnVal;	
 }
 
 Variable String_valueOf_F(RuntimeEnvironment* pRuntimeEnvironment)
