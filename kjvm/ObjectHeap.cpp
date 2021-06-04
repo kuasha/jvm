@@ -47,7 +47,8 @@ Object ObjectHeap::CreateStringObject(std::string* pStrValue, ClassHeap *pClassH
 	Variable *pVar= this->GetObjectPointer(object);
 	if(pVar==NULL) return object;
 
-	pVar[1].ptrValue=(void*)pStrValue;
+	//TODO: Fix the memory leak
+	pVar[1].ptrValue=(void*)new std::string(*pStrValue);
 
 	return object;
 }

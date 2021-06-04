@@ -641,7 +641,7 @@ void PrintNameAndTypeInfo(Frame *pFrameStack, CONSTANT_NameAndType_info *nameAnd
 	std::cout << "Name and type: " << name << "->" << desc << std::endl;
 }
 
-void PrintStringInfo(Frame *pFrameStack, u2 string_index)
+std::string GetStringFromStringIndex(Frame *pFrameStack, u2 string_index)
 {
 	assert(pFrameStack);
 	u1* sp = (u1*) pFrameStack[0].pClass->constant_pool[string_index];
@@ -654,8 +654,10 @@ void PrintStringInfo(Frame *pFrameStack, u2 string_index)
 
 	pFrameStack[0].pClass->GetStringFromConstPool(name_index, name);
 	std::cout << "String: " << name  << std::endl;
-	assert(name[0] == '\001');
-	assert(name[21] == '\001');
+	//assert(name[0] == '\001');
+	//assert(name[21] == '\001');
+
+	return name;
 }
 
 void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
@@ -704,7 +706,7 @@ void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
 				<< "Tag: "<< (int) pFrameStack[0].pClass->constant_pool[bootstrap_method->bootstrap_arguments[0]]->tag << std::endl;
 
 	// argument
-	PrintStringInfo(pFrameStack, bootstrap_method->bootstrap_arguments[0]);
+	std::string bootstrap_arg = GetStringFromStringIndex(pFrameStack, bootstrap_method->bootstrap_arguments[0]);
 
 	auto method_name_type = pFrameStack[0].pClass->constant_pool[dynInfo.name_and_type_index];
 	assert(method_name_type->tag == CONSTANT_NameAndType);
@@ -716,31 +718,25 @@ void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
 	pFrameStack[0].pClass->GetStringFromConstPool(name_index, method_name);
 	pFrameStack[0].pClass->GetStringFromConstPool(desc_index, desc);
 
-	if(!method_name.compare("makeConcatWithConstants") && !desc.compare("(Ljava/lang/String;J)Ljava/lang/String;"))
+	//if(!method_name.compare("makeConcatWithConstants") && !desc.compare("(Ljava/lang/String;J)Ljava/lang/String;"))
 	{
 		std::cout << method_name << desc << std::endl;
 	}
 
-	int params = GetMethodParametersStackCount(desc) + 1;
-
-	//static
-	// if (type == invokestatic)
-	// 	params--;
-
-	int nDiscardStack = params;
-	if (pFrameStack[1].pMethod->access_flags & ACC_NATIVE)
+	Variable returnVal;
+	Frame *pFrame=&pFrameStack[0];
+	Object object=pFrame->stack[pFrame->sp].object;
+	Variable *pVar=pObjectHeap->GetObjectPointer(object);
+	if(pVar)
 	{
+		std::string *varValue = (std::string *)pVar[1].ptrValue;		
+		if(varValue)
+		{
+			std::string result = bootstrap_arg + *varValue;
+			returnVal.object = pObjectHeap->CreateStringObject(&result, pClassHeap);
+			pFrameStack[0].stack[pFrameStack[0].sp] = returnVal;
+		}			
 	}
-	else
-	{
-		nDiscardStack += pFrameStack[1].pMethod->pCode_attr->max_locals;
-	}
-
-	pFrameStack[1].stack = &Frame::pOpStack[pFrameStack->stack - Frame::pOpStack + pFrameStack[0].sp - params + 1];
-	pFrameStack[1].sp = 2+nDiscardStack - 1;
-
-	// TODO: implement rest of the logic
-	pFrameStack[0].sp -= 2;
 }
 
 void ExecutionEngine::ExecuteInvokeVirtual(Frame *pFrameStack, u2 type)
@@ -887,7 +883,7 @@ pNativeMethod GetNativeMethod(std::string strSign)
 	if (false)
 	{
 	}
-	else if(strSign.compare("java/lang/invoke/StringConcatFactory@makeConcatWithConstants(Ljava/lang/String;J)Ljava/lang/String;"))
+	else if(!strSign.compare("java/lang/invoke/StringConcatFactory@makeConcatWithConstants(Ljava/lang/String;J)Ljava/lang/String;"))
 	{
 		return java_lang_invoke_StringConcatFactory_makeConcatWithConstants_String_J;
 	}
@@ -1000,6 +996,7 @@ int ExecutionEngine::ExecuteNewArray(Frame *pFrame)
 	pFrame->sp++;
 	return 0;
 }
+
 int ExecutionEngine::ExecuteANewArray(Frame *pFrame)
 {
 	u2 index = getu2(&pFrame->pMethod->pCode_attr->code[pFrame->pc + 1]);

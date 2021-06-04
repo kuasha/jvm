@@ -12,12 +12,12 @@ public class Test implements ITest, ITest2, ITest3, ITest4
 	public native void Print(String p);
 	public int Entry()
 	{		
-		long i=10L;
-		String str=String.valueOf(i);
-		name = "This is a test print from java class\n";
-		name += " StringBuilder Test " + i;
+		//long i=10L;
+		//name = "This is a test print from java class\n";
+		String hello = "hello";
+		String name = " StringBuilder Test " + hello;		
 		Print(name);
-		Print("Hello world\n");
+		Print(name + "Hello world\n");
 		return 2;
 	}
 	public int add(int a, int b)

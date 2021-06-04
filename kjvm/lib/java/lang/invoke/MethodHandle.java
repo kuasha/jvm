@@ -2,7 +2,9 @@ package java.lang.invoke;
 
 public class MethodHandle {
 
-    public MethodHandle()
+    public MethodHandle() {
+        
+    }
     public MethodHandle asType(MethodType newType) {
         return null;
     }
