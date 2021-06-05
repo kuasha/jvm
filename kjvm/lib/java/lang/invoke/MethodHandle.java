@@ -1,16 +1,18 @@
 package java.lang.invoke;
 
 public class MethodHandle {
-
+    private MethodType methodType;
     public MethodHandle() {
-        
+
     }
+    
     public MethodHandle asType(MethodType newType) {
-        return null;
+        this.methodType = newType;
+        return this;
     }
 
     public Object invoke(Object... args) {
-        return null;
+        return "String from MethodHandle.invoke";
     }
 
     public Object invokeExact(Object... args) {
@@ -18,7 +20,7 @@ public class MethodHandle {
     }
 
     public MethodType type() {
-        return null;
+        return methodType;
     }
 
     class Lookup {

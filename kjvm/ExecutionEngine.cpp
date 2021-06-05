@@ -623,7 +623,7 @@ struct CONSTANT_NameAndType_info
 };
 */
 
-void PrintNameAndTypeInfo(Frame *pFrameStack, CONSTANT_NameAndType_info *nameAndType)
+std::tuple<std::string, std::string> GetNameAndTypeInfo(Frame *pFrameStack, CONSTANT_NameAndType_info *nameAndType)
 {
 	assert(pFrameStack && nameAndType && nameAndType->tag == CONSTANT_NameAndType);
 	u1* nt = (u1*) nameAndType;
@@ -636,9 +636,9 @@ void PrintNameAndTypeInfo(Frame *pFrameStack, CONSTANT_NameAndType_info *nameAnd
 	assert(pFrameStack[0].pClass->constant_pool[descriptor_index]->tag == CONSTANT_Utf8);
 
 	pFrameStack[0].pClass->GetStringFromConstPool(name_index, name);
-	pFrameStack[0].pClass->GetStringFromConstPool(descriptor_index, desc);
+	pFrameStack[0].pClass->GetStringFromConstPool(descriptor_index, desc);	
 
-	std::cout << "Name and type: " << name << "->" << desc << std::endl;
+	return std::make_tuple(name, desc);
 }
 
 std::string GetStringFromStringIndex(Frame *pFrameStack, u2 string_index)
@@ -695,12 +695,29 @@ void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
 	assert(handle_method_name_type->tag == CONSTANT_NameAndType);
 
 	u2 handle_name_index = getu2(&((char*)handle_method_class)[1]);
-	std::string name;
-	pFrameStack[0].pClass->GetStringFromConstPool(handle_name_index, name);
-	std::cout << name << std::endl;
+	std::string dyn_name;
+	pFrameStack[0].pClass->GetStringFromConstPool(handle_name_index, dyn_name);
+	std::cout << dyn_name << std::endl;
+
+	JavaClass *pDyn_Class = new JavaClass();
+
+	/*
+		1. Load the bootstrap class
+		2. Create object of bootstrap class (or not for static invocation)
+		3. Find the bootstrap method
+		4. Execute the method to get CallSite object
+		5. Fix frame/stack
+		6. Execute callsite.invoke method
+		5. Fix frame/stack
+	*/
+
+	bool bRet = pClassHeap->LoadClass(dyn_name, pDyn_Class);
 
 	// name and type of the bootstrap class
-	PrintNameAndTypeInfo(pFrameStack, (CONSTANT_NameAndType_info *) handle_method_name_type);
+	std::string dyn_fn, dyn_type;
+	tie(dyn_fn, dyn_type) = GetNameAndTypeInfo(pFrameStack, (CONSTANT_NameAndType_info *) handle_method_name_type);
+
+	std::cout << "Name and type: " << dyn_fn << "->" << dyn_type << std::endl;
 
 	std::cout << "Bootstrap argument 0 index: " <<  bootstrap_method->bootstrap_arguments[0] 
 				<< "Tag: "<< (int) pFrameStack[0].pClass->constant_pool[bootstrap_method->bootstrap_arguments[0]]->tag << std::endl;
@@ -722,6 +739,34 @@ void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack)
 	{
 		std::cout << method_name << desc << std::endl;
 	}
+
+	method_info_ex method;
+
+	method.name_index = getu2(&pConstPool[1]);
+	method.descriptor_index = getu2(&pConstPool[3]);
+
+	method.access_flags = 0; // todo set
+
+	//printf("SuperClass - %s",(method.access_flags& ACC_SUPER)?"Yes":"No");
+	JavaClass *pVirtualClass = pDyn_Class;
+	int nIndex = pDyn_Class->GetMethodIndex(dyn_fn, dyn_type, pVirtualClass);
+
+	memset(&pFrameStack[1], 0, sizeof(pFrameStack[1]));
+	pFrameStack[1].pMethod = &pDyn_Class->methods[nIndex];
+
+	method.access_flags = getu2((char *)pFrameStack[1].pMethod);
+	if (ACC_SUPER & method.access_flags)
+	{
+		pFrameStack[1].pClass = pVirtualClass->GetSuperClass();
+		//ShowClassInfo(pFrameStack[1].pClass);
+	}
+	else
+	{
+		pFrameStack[1].pClass = pVirtualClass;
+	}
+
+	//pFrameStack[1].pOpStack[++pFrameStack[1].sp]=pFrameStack[0].pOpStack[pFrameStack[0].sp--];
+	int params = GetMethodParametersStackCount(dyn_type) + 1;
 
 	Variable returnVal;
 	Frame *pFrame=&pFrameStack[0];
@@ -868,10 +913,16 @@ u2 ExecutionEngine::GetMethodParametersStackCount(std::string strMethodDesc)
 			while (strMethodDesc[i] != ';')
 				i++;
 		}
+		
+		if (strMethodDesc[i] == '[')
+			continue;
+
 		if (strMethodDesc[i] == ')')
 			break;
+
 		if (strMethodDesc[i] == 'J' || strMethodDesc[i] == 'D')
 			count++;
+
 		count++;
 	}
 
