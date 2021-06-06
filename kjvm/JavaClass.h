@@ -227,6 +227,16 @@ struct JavaClassFileFormat
 	BootstrapMethods_attribute *pBootstrapMethods_attribute_; // name=BootstrapMethods
 };
 
+#define REF_getField 1 /*	getfield C.f:T */
+#define REF_getStatic 2 /*	getstatic C.f:T */
+#define REF_putField 3 /*	putfield C.f:T */
+#define REF_putStatic 4 /* 	putstatic C.f:T */
+#define REF_invokeVirtual 5 /* 	invokevirtual C.m:(A*)T */
+#define REF_invokeStatic 6 /*	invokestatic C.m:(A*)T */
+#define REF_invokeSpecial 7 /*	invokespecial C.m:(A*)T */
+#define REF_newInvokeSpecial 8 /*	new C; dup; invokespecial C.<init>:(A*)void */
+#define REF_invokeInterface 9 /*	invokeinterface C.m:(A*)T */
+
 // TODO: P.6: What cannot be checked at compile time should be checkable at run time
 // Avoid (try to) pointers that can not be checked for limits
 

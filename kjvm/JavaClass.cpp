@@ -643,7 +643,7 @@ bool JavaClass::CreateObject(u2 index, ObjectHeap *pObjectHeap, Object &object)
 	if (!this->GetStringFromConstPool(name_index, strClassName))
 		return false;
 
-	printf("Creating new object of class [%ws]\n", strClassName);
+	printf("Creating new object of class [%s]\n", strClassName.c_str());
 
 	JavaClass *pNewClass = this->m_pClassHeap->GetClass(strClassName);
 	if (pNewClass == NULL)

@@ -8,37 +8,37 @@ ClassHeap::ClassHeap(void)
 
 ClassHeap::~ClassHeap(void)
 {
-	
 }
 
-bool ClassHeap::AddClass(JavaClass* pJavaClass)
+bool ClassHeap::AddClass(JavaClass *pJavaClass)
 {
-	if(!pJavaClass) return false;
-	std::string name=pJavaClass->GetName();
+	if (!pJavaClass)
+		return false;
+	std::string name = pJavaClass->GetName();
 
 	//TODO- check if already exists
 
-	m_ClassMap[name]=pJavaClass;
+	m_ClassMap[name] = pJavaClass;
 	return true;
 }
 
-JavaClass* ClassHeap::GetClass(std::string strClassName)
+JavaClass *ClassHeap::GetClass(std::string strClassName)
 {
-	JavaClass *pClass=NULL;
+	JavaClass *pClass = NULL;
 	auto it = m_ClassMap.find(strClassName);
-	if(it == m_ClassMap.end())
+	if (it == m_ClassMap.end())
 	{
 		pClass = new JavaClass();
-		bool bRet=this->LoadClass(strClassName, pClass);
-		if(!bRet)
+		bool bRet = this->LoadClass(strClassName, pClass);
+		if (!bRet)
 		{
 			delete pClass;
-			pClass=NULL;
-		}		
+			pClass = NULL;
+		}
 	}
-	else 
+	else
 	{
-		pClass = (JavaClass*)it->second;
+		pClass = (JavaClass *)it->second;
 	}
 
 	return pClass;
@@ -47,23 +47,23 @@ JavaClass* ClassHeap::GetClass(std::string strClassName)
 bool ClassHeap::LoadClass(std::string strClassName, JavaClass *pClass)
 {
 	std::string path, relPath;
-	if(!pClass) 
+	if (!pClass)
 	{
 		std::cout << "Must pass a class object" << std::endl;
 		return false;
 	}
 
-	relPath=strClassName+".class";
+	relPath = strClassName + ".class";
 
-	if(!pFilePathManager->GetAbsolutePath(relPath, path, classRoots_))
+	if (!pFilePathManager->GetAbsolutePath(relPath, path, classRoots_))
 	{
 		std::cout << "File not found " << path << std::endl;
-		return false;	
+		return false;
 	}
 
-	bool bRet=pClass->LoadClassFromFile(path);
+	bool bRet = pClass->LoadClassFromFile(path);
 
-	if(!bRet)
+	if (!bRet)
 	{
 		return false;
 	}
@@ -73,7 +73,7 @@ bool ClassHeap::LoadClass(std::string strClassName, JavaClass *pClass)
 	return AddClass(pClass);
 }
 
-void ClassHeap::AddClassRoot(std::string classRoot) 
+void ClassHeap::AddClassRoot(std::string classRoot)
 {
 	classRoots_.push_back(classRoot);
 }

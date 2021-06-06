@@ -117,9 +117,9 @@ void ShowClassInfo(JavaClass *pClass)
 		return;
 
 	std::string name = pClass->GetName();
-	printf("Class Name = [%s]\n", name);
+	printf("Class Name = [%s]\n", name.c_str());
 	name = pClass->GetSuperClassName();
-	printf("Super Class Name = [%s]\n", name);
+	printf("Super Class Name = [%s]\n", name.c_str());
 
 	printf("Object Size = [%lu]\n", pClass->GetObjectSize());
 
@@ -130,14 +130,16 @@ void ShowClassInfo(JavaClass *pClass)
 		if (1 != pClass->constant_pool[i]->tag)
 			continue;
 		pClass->GetStringFromConstPool(i, strRetVal);
-		printf("String at %d [%s]\n", i, strRetVal);
+		printf("String at %d [%s]\n", i, strRetVal.c_str());
 	}
 
 	for (int i = 0; i < pClass->methods_count; i++)
 	{
+	    std::cout << "Method " << i << ":" << std::endl;
+	    std::cout << "Access flags: " << pClass->methods[i].access_flags << std::endl;
 		if (pClass->methods[i].pCode_attr != NULL)
 		{
-			printf("Method %d\nCode Length= %d\n", i, pClass->methods[i].pCode_attr->code_length);
+			printf("ode Length= %d\n", pClass->methods[i].pCode_attr->code_length);
 			printf("Max stack = %d, Max Locals = %d, Exception table length= %d\nCODE\n", pClass->methods[i].pCode_attr->max_stack, pClass->methods[i].pCode_attr->max_locals, pClass->methods[i].pCode_attr->exception_table_length);
 
 			for (u4 j = 0; j < pClass->methods[i].pCode_attr->code_length; j++)

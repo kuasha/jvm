@@ -15,10 +15,12 @@ typedef short i2;
 typedef float f4;
 typedef double f8;
 
+//TODO: write test cases to validate these
+
 #define LOINT64(I8) (u4)(I8 &0xFFFFFFFF)
 #define HIINT64(I8) (u4)(I8 >> 32)
-#define getu4(p) (u4)( (u4)((p)[0])<<24 & 0xFF000000 | (u4)((p)[1])<<16 & 0x00FF0000 | (u4)((p)[2])<<8 & 0x0000FF00| (u4)((p)[3]) & 0x000000FF)
-#define getu2(p) (u2)((p)[0]<< 8 & 0x0000FF00 |(p)[1])
+#define getu4(p) (u4)( (u4)((u1)(p)[0])<<24 & 0xFF000000 | (u4)((u1)(p)[1])<<16 & 0x00FF0000 | (u4)((u1)(p)[2])<<8 & 0x0000FF00| (u4)((u1)(p)[3]) & 0x000000FF)
+#define getu2(p) (u2)((u1)(p)[0]<< 8 & 0x0000FF00 | (u1)(p)[1])
 
 #define MAKEI8(i4high, i4low) (i8) (((i8)i4high) << 32 | (i8)i4low)
 
