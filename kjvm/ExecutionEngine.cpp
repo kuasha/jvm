@@ -737,7 +737,7 @@ void ExecutionEngine::ExecuteInvokeDynamic(Frame *pFrameStack) {
     //printf("SuperClass - %s",(method.access_flags& ACC_SUPER)?"Yes":"No");
     JavaClass *pVirtualClass = pDyn_Class;
 
-    ShowClassInfo(pDyn_Class);
+    //ShowClassInfo(pDyn_Class);
 
     int nIndex = pDyn_Class->GetMethodIndex(dyn_fn, dyn_type, pVirtualClass);
 

@@ -13,7 +13,7 @@ list(APPEND LIB_LIST ${OPENSSL_LIBRARIES})
 
 add_definitions(-DDBG_PRINT=Verbose)
 
-add_executable(hmjvm kjvm.cpp JavaClass.cpp ClassHeap.cpp ExecutionEngine.cpp ObjectHeap.cpp NativeMethods.cpp opcodes.cpp FilePathManager.cpp)
+add_executable(hmjvm kjvm.cpp logging.cpp JavaClass.cpp ClassHeap.cpp ExecutionEngine.cpp ObjectHeap.cpp NativeMethods.cpp opcodes.cpp FilePathManager.cpp)
 
 target_link_libraries(hmjvm ${OPENSSL_LIBRARIES})
 
